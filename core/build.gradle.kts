@@ -5,18 +5,29 @@ plugins {
 }
 
 /**
- * Sekrety trzymamy poza repozytorium: najpierw local.properties, potem zmienne
- * środowiskowe. Wcześniej token Telegra.ph byl wpisany na sztywno w kodzie
- * zrodlowym, wiec kazdy, kto mial repozytorium albo APK, mogl publikowac
- * w imieniu wlasciciela. Teraz brak sekretu nie psuje budowania - po prostu
- * wylacza funkcje publikacji karty online.
+ * Sekrety trzymamy poza repozytorium. Kolejnosc zrodel (pierwsze wygrywa):
+ *   1. wlasciwosc Gradle (-PDROPME_TELEGRAPH_TOKEN=...)
+ *   2. local.properties
+ *   3. zmienna srodowiskowa
+ *
+ * Wlasciwosc Gradle jest pierwsza specjalnie po to, zeby publikowany APK dalo sie
+ * zbudowac BEZ sekretu, nie ruszajac lokalnego local.properties:
+ *
+ *     ./gradlew assembleRelease -PDROPME_TELEGRAPH_TOKEN=
+ *
+ * Wczesniej token byl wpisany na sztywno w kodzie zrodlowym, wiec kazdy, kto mial
+ * repozytorium albo APK, mogl publikowac w imieniu wlasciciela. Brak sekretu nie
+ * psuje budowania - wylacza tylko funkcje publikacji karty online.
  */
 val localProps = Properties().apply {
     val file = rootProject.file("local.properties")
     if (file.exists()) file.inputStream().use { load(it) }
 }
 
-fun secret(key: String): String? = localProps.getProperty(key) ?: System.getenv(key)
+fun secret(key: String): String? =
+    project.findProperty(key)?.toString()
+        ?: localProps.getProperty(key)
+        ?: System.getenv(key)
 
 val telegraphToken: String = secret("DROPME_TELEGRAPH_TOKEN") ?: ""
 

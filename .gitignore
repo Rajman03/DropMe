@@ -13,6 +13,10 @@ local.properties
 *.apk
 *.idsig
 
+# Wyjątek: oficjalny build wersji release ma być dostępny do pobrania z repozytorium
+# (linkuje do niego README). Buildy debug i testowe nadal są pomijane.
+!app-release.apk
+
 # Klucze podpisywania - trzymaj je POZA repozytorium (backup offline!).
 # Wyciek release.keystore = ktoś może podpisywać się jako Twoja aplikacja.
 *.keystore
