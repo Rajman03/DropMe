@@ -1,0 +1,25 @@
+*.iml
+.gradle
+/local.properties
+/.idea/
+.DS_Store
+/build
+/captures
+.externalNativeBuild
+.cxx
+local.properties
+
+# Artefakty budowania w katalogu głównym
+*.apk
+*.idsig
+
+# Klucze podpisywania - trzymaj je POZA repozytorium (backup offline!).
+# Wyciek release.keystore = ktoś może podpisywać się jako Twoja aplikacja.
+*.keystore
+*.jks
+
+# Załączniki/prywatne pliki robocze (zdjęcia, zrzuty z czatu)
+/attachments
+
+# Katalogi build/ wszystkich modułów (core/, data/, feature-*/, app/)
+build/

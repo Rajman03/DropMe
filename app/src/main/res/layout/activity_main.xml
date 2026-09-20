@@ -1,0 +1,257 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/rootLayout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/background">
+
+    <!-- ================= EKRAN LOGOWANIA / REJESTRACJI ================= -->
+    <include
+        android:id="@+id/layoutAuth"
+        layout="@layout/layout_auth"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+    <!-- ================= EKRAN PIN (2FA) ================= -->
+    <include
+        android:id="@+id/layoutPinAuth"
+        layout="@layout/layout_pin_auth"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+    <LinearLayout
+        android:id="@+id/layoutMainApp"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+        <!-- Top App Bar (Unified Hi, David style header) -->
+        <LinearLayout
+            android:id="@+id/headerBar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/white"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:paddingHorizontal="20dp"
+            android:paddingTop="14dp"
+            android:paddingBottom="12dp"
+            android:elevation="2dp">
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/tvHeaderTitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Cześć, Jan 👋"
+                android:textColor="@color/text_primary"
+                android:textSize="22sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tvHeaderSubtitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Twoja wirtualna wizytówka"
+                android:textColor="@color/text_secondary"
+                android:textSize="13sp"
+                android:layout_marginTop="2dp" />
+        </LinearLayout>
+
+        <!-- Rank Badge -->
+        <TextView
+            android:id="@+id/tvHeaderRankBadge"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="⭐ Premium"
+            android:textSize="11sp"
+            android:textStyle="bold"
+            android:textColor="@color/white"
+            android:background="@drawable/badge_premium"
+            android:paddingHorizontal="10dp"
+            android:paddingVertical="5dp"
+            android:layout_marginEnd="10dp" />
+
+        <!-- Circular Avatar with ring -->
+        <TextView
+            android:id="@+id/tvHeaderAvatar"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:background="@drawable/circle_action_btn_light"
+            android:gravity="center"
+            android:text="👑"
+            android:textSize="22sp" />
+    </LinearLayout>
+
+    <!-- Main Content Area -->
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <!-- ================= ZAKŁADKA 1: DASHBOARD ================= -->
+            <include
+                android:id="@+id/layoutDashboard"
+                layout="@layout/layout_dashboard"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" />
+
+        <!-- ================= ZAKŁADKA 2: PAYWALL ================= -->
+            <include
+                android:id="@+id/layoutPaywall"
+                layout="@layout/layout_paywall"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" />
+
+        <!-- ================= ZAKŁADKA 3: PROFIL ================= -->
+            <include
+                android:id="@+id/layoutProfile"
+                layout="@layout/layout_profile"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" />
+
+    </FrameLayout>
+
+    <!-- Modern Dynamic Island Floating Navigation Dock -->
+    <LinearLayout
+        android:id="@+id/dockDynamicIsland"
+        android:layout_width="match_parent"
+        android:layout_height="62dp"
+        android:layout_marginHorizontal="20dp"
+        android:layout_marginBottom="16dp"
+        android:layout_marginTop="4dp"
+        android:background="@drawable/dynamic_island_nav_bg"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:elevation="12dp"
+        android:paddingHorizontal="6dp"
+        android:paddingVertical="6dp">
+
+        <!-- TAB 1: Home / Dashboard -->
+        <LinearLayout
+            android:id="@+id/navDashboard"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:clickable="true"
+            android:focusable="true">
+
+            <LinearLayout
+                android:id="@+id/pillNavDash"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:orientation="horizontal"
+                android:gravity="center"
+                android:paddingHorizontal="14dp"
+                android:background="@drawable/dynamic_island_active_pill">
+
+                <ImageView
+                    android:id="@+id/ivNavIconDash"
+                    android:layout_width="18dp"
+                    android:layout_height="18dp"
+                    android:src="@drawable/ic_nav_home"
+                    android:contentDescription="Pulpit" />
+
+                <TextView
+                    android:id="@+id/tvNavLabelDash"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Pulpit"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:textColor="#FFFFFF"
+                    android:layout_marginStart="6dp" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- TAB 2: Paywall -->
+        <LinearLayout
+            android:id="@+id/navPaywall"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:clickable="true"
+            android:focusable="true">
+
+            <FrameLayout
+                android:id="@+id/pillNavPaywall"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:paddingHorizontal="14dp">
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:orientation="horizontal"
+                    android:gravity="center">
+
+                    <ImageView
+                        android:id="@+id/ivNavIconPaywall"
+                        android:layout_width="18dp"
+                        android:layout_height="18dp"
+                        android:src="@drawable/ic_coffee"
+                        android:contentDescription="Kawa" />
+
+                    <TextView
+                        android:id="@+id/tvNavLabelPaywall"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Kawa"
+                        android:textSize="12sp"
+                        android:textColor="#94A3B8"
+                        android:layout_marginStart="6dp" />
+                </LinearLayout>
+            </FrameLayout>
+        </LinearLayout>
+
+        <!-- TAB 3: Profile -->
+        <LinearLayout
+            android:id="@+id/navProfile"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:clickable="true"
+            android:focusable="true">
+
+            <LinearLayout
+                android:id="@+id/pillNavProf"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:orientation="horizontal"
+                android:gravity="center"
+                android:paddingHorizontal="14dp">
+
+                <ImageView
+                    android:id="@+id/ivNavIconProf"
+                    android:layout_width="18dp"
+                    android:layout_height="18dp"
+                    android:src="@drawable/ic_nav_user"
+                    android:contentDescription="Profil" />
+
+                <TextView
+                    android:id="@+id/tvNavLabelProf"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Konto"
+                    android:textSize="12sp"
+                    android:textColor="#94A3B8"
+                    android:layout_marginStart="6dp" />
+            </LinearLayout>
+        </LinearLayout>
+
+    </LinearLayout>
+    </LinearLayout>
+</LinearLayout>

@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/card_bg">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="22dp"
+        android:gravity="center_horizontal">
+
+        <!-- Top Title -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Twoja Wizytówka Multi-Link"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:textColor="@color/text_primary" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Pokaż ten kod QR znajomemu do zeskanowania"
+            android:textSize="12sp"
+            android:textColor="@color/text_secondary"
+            android:layout_marginTop="2dp"
+            android:layout_marginBottom="16dp" />
+
+        <!-- QR Code Container -->
+        <FrameLayout
+            android:layout_width="260dp"
+            android:layout_height="260dp"
+            android:background="@drawable/card_qr_white_bg"
+            android:padding="12dp"
+            android:elevation="6dp"
+            android:layout_marginBottom="14dp">
+
+            <ImageView
+                android:id="@+id/ivMultiLinkQr"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:scaleType="fitCenter"
+                android:contentDescription="Kod QR Wizytówki" />
+
+            <ProgressBar
+                android:id="@+id/pbMultiLinkLoading"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_gravity="center"
+                android:indeterminate="true" />
+        </FrameLayout>
+
+        <!-- User Name & Bio -->
+        <TextView
+            android:id="@+id/tvMlViewName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Kamil Rajman"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:textColor="@color/text_primary" />
+
+        <TextView
+            android:id="@+id/tvMlViewBio"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Twórca &amp; Developer 🚀"
+            android:textSize="12sp"
+            android:textColor="@color/text_secondary"
+            android:layout_marginTop="2dp"
+            android:layout_marginBottom="12dp" />
+
+        <!-- Social Icons Preview Container -->
+        <LinearLayout
+            android:id="@+id/containerMlBadges"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:layout_marginBottom="18dp" />
+
+        <!-- Action Buttons -->
+        <Button
+            android:id="@+id/btnOpenWebCard"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:text="🌐 Otwórz Wizytówkę w Przeglądarce"
+            android:textSize="13sp"
+            android:textStyle="bold"
+            android:textColor="@color/white"
+            android:background="@drawable/btn_pill_dark"
+            android:layout_marginBottom="8dp" />
+
+        <Button
+            android:id="@+id/btnShareMultiLink"
+            android:layout_width="match_parent"
+            android:layout_height="44dp"
+            android:text="📋 Kopiuj / Udostępnij Link"
+            android:textSize="13sp"
+            android:textColor="@color/text_primary"
+            android:background="@drawable/btn_pill_light"
+            android:layout_marginBottom="8dp" />
+
+        <Button
+            android:id="@+id/btnCloseMultiLinkView"
+            android:layout_width="match_parent"
+            android:layout_height="40dp"
+            android:text="Zamknij"
+            android:textSize="13sp"
+            android:textColor="@color/text_secondary"
+            android:background="@android:color/transparent" />
+
+    </LinearLayout>
+</ScrollView>

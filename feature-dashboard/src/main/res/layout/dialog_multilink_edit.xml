@@ -1,0 +1,212 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/card_bg">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="22dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Edytuj Wizytówkę Multi-Link"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:textColor="@color/text_primary"
+            android:layout_marginBottom="4dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Wpisz swoje nicki. Aplikacja utworzy jeden uniwersalny kod QR dla wszystkich profili!"
+            android:textSize="12sp"
+            android:textColor="@color/text_secondary"
+            android:layout_marginBottom="16dp" />
+
+        <!-- Name -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="TWOJE IMIĘ / NICK"
+            android:textSize="11sp"
+            android:textStyle="bold"
+            android:textColor="@color/text_secondary"
+            android:layout_marginBottom="4dp" />
+        <EditText
+            android:id="@+id/etMlName"
+            android:layout_width="match_parent"
+            android:layout_height="46dp"
+            android:hint="np. Kamil Rajman"
+            android:background="@drawable/search_bar_bg"
+            android:paddingHorizontal="14dp"
+            android:textColor="@color/text_primary"
+            android:textSize="13sp"
+            android:layout_marginBottom="12dp" />
+
+        <!-- Bio -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="OPIS / TYTUŁ (OPCJONALNIE)"
+            android:textSize="11sp"
+            android:textStyle="bold"
+            android:textColor="@color/text_secondary"
+            android:layout_marginBottom="4dp" />
+        <EditText
+            android:id="@+id/etMlBio"
+            android:layout_width="match_parent"
+            android:layout_height="46dp"
+            android:hint="np. Twórca &amp; Developer 🚀"
+            android:background="@drawable/search_bar_bg"
+            android:paddingHorizontal="14dp"
+            android:textColor="@color/text_primary"
+            android:textSize="13sp"
+            android:layout_marginBottom="12dp" />
+
+        <!-- Instagram -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="📸 INSTAGRAM (NICK)"
+            android:textSize="11sp"
+            android:textStyle="bold"
+            android:textColor="@color/text_secondary"
+            android:layout_marginBottom="4dp" />
+        <EditText
+            android:id="@+id/etMlInstagram"
+            android:layout_width="match_parent"
+            android:layout_height="46dp"
+            android:hint="np. @rajman lub rajman"
+            android:background="@drawable/search_bar_bg"
+            android:paddingHorizontal="14dp"
+            android:textColor="@color/text_primary"
+            android:textSize="13sp"
+            android:layout_marginBottom="12dp" />
+
+        <!-- TikTok -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="🎵 TIKTOK (NICK)"
+            android:textSize="11sp"
+            android:textStyle="bold"
+            android:textColor="@color/text_secondary"
+            android:layout_marginBottom="4dp" />
+        <EditText
+            android:id="@+id/etMlTiktok"
+            android:layout_width="match_parent"
+            android:layout_height="46dp"
+            android:hint="np. @rajman04 lub rajman04"
+            android:background="@drawable/search_bar_bg"
+            android:paddingHorizontal="14dp"
+            android:textColor="@color/text_primary"
+            android:textSize="13sp"
+            android:layout_marginBottom="12dp" />
+
+        <!-- Snapchat -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="👻 SNAPCHAT (NICK)"
+            android:textSize="11sp"
+            android:textStyle="bold"
+            android:textColor="@color/text_secondary"
+            android:layout_marginBottom="4dp" />
+        <EditText
+            android:id="@+id/etMlSnapchat"
+            android:layout_width="match_parent"
+            android:layout_height="46dp"
+            android:hint="np. rajman"
+            android:background="@drawable/search_bar_bg"
+            android:paddingHorizontal="14dp"
+            android:textColor="@color/text_primary"
+            android:textSize="13sp"
+            android:layout_marginBottom="12dp" />
+
+        <!-- Discord -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="💬 DISCORD (TAG LUB LINK)"
+            android:textSize="11sp"
+            android:textStyle="bold"
+            android:textColor="@color/text_secondary"
+            android:layout_marginBottom="4dp" />
+        <EditText
+            android:id="@+id/etMlDiscord"
+            android:layout_width="match_parent"
+            android:layout_height="46dp"
+            android:hint="np. rajman#1234 lub link"
+            android:background="@drawable/search_bar_bg"
+            android:paddingHorizontal="14dp"
+            android:textColor="@color/text_primary"
+            android:textSize="13sp"
+            android:layout_marginBottom="12dp" />
+
+        <!-- X (Twitter) -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="🌐 X / TWITTER (NICK)"
+            android:textSize="11sp"
+            android:textStyle="bold"
+            android:textColor="@color/text_secondary"
+            android:layout_marginBottom="4dp" />
+        <EditText
+            android:id="@+id/etMlTwitter"
+            android:layout_width="match_parent"
+            android:layout_height="46dp"
+            android:hint="np. @rajman"
+            android:background="@drawable/search_bar_bg"
+            android:paddingHorizontal="14dp"
+            android:textColor="@color/text_primary"
+            android:textSize="13sp"
+            android:layout_marginBottom="12dp" />
+
+        <!-- Strona WWW / Inny link -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="🔗 STRONA WWW / LINK"
+            android:textSize="11sp"
+            android:textStyle="bold"
+            android:textColor="@color/text_secondary"
+            android:layout_marginBottom="4dp" />
+        <EditText
+            android:id="@+id/etMlWebsite"
+            android:layout_width="match_parent"
+            android:layout_height="46dp"
+            android:hint="np. moja-strona.pl"
+            android:background="@drawable/search_bar_bg"
+            android:paddingHorizontal="14dp"
+            android:textColor="@color/text_primary"
+            android:textSize="13sp"
+            android:layout_marginBottom="20dp" />
+
+        <!-- Action buttons -->
+        <Button
+            android:id="@+id/btnSaveMultiLink"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:text="💾 Zapisz i Wygeneruj Kod QR"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:textColor="@color/white"
+            android:background="@drawable/btn_pill_dark"
+            android:layout_marginBottom="8dp" />
+
+        <Button
+            android:id="@+id/btnCancelMultiLink"
+            android:layout_width="match_parent"
+            android:layout_height="44dp"
+            android:text="Anuluj"
+            android:textSize="13sp"
+            android:textColor="@color/text_secondary"
+            android:background="@drawable/btn_pill_light" />
+
+    </LinearLayout>
+</ScrollView>

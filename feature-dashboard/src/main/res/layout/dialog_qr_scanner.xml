@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/card_bg">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="22dp"
+        android:gravity="center_horizontal">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Skaner Kodów QR"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:textColor="@color/text_primary" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Zeskanuj kod QR znajomego lub wczytaj ze zdjęcia"
+            android:textSize="12sp"
+            android:textColor="@color/text_secondary"
+            android:layout_marginTop="2dp"
+            android:layout_marginBottom="16dp" />
+
+        <!-- Camera Scanner Card -->
+        <FrameLayout
+            android:id="@+id/cardScannerPreview"
+            android:layout_width="match_parent"
+            android:layout_height="220dp"
+            android:background="@drawable/card_featured_bg"
+            android:elevation="4dp"
+            android:layout_marginBottom="16dp">
+
+            <!-- Target Reticle Icon -->
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:layout_gravity="center">
+
+                <ImageView
+                    android:layout_width="64dp"
+                    android:layout_height="64dp"
+                    android:src="@drawable/ic_nav_scan"
+                    android:contentDescription="Skanuj" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Skieruj obiektyw na kod QR"
+                    android:textSize="12sp"
+                    android:textColor="#FFFFFF"
+                    android:layout_marginTop="8dp" />
+            </LinearLayout>
+        </FrameLayout>
+
+        <!-- Primary Action: Launch Camera / Scan -->
+        <Button
+            android:id="@+id/btnLaunchSystemScanner"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:text="📷 Uruchom Aparat do Skanowania"
+            android:textSize="13sp"
+            android:textStyle="bold"
+            android:textColor="@color/white"
+            android:background="@drawable/btn_pill_dark"
+            android:layout_marginBottom="8dp" />
+
+        <!-- Secondary Action: Pick photo from gallery -->
+        <Button
+            android:id="@+id/btnPickFromGallery"
+            android:layout_width="match_parent"
+            android:layout_height="44dp"
+            android:text="🖼️ Zeskanuj ze Zdjęcia w Galerii"
+            android:textSize="13sp"
+            android:textColor="@color/text_primary"
+            android:background="@drawable/btn_pill_light"
+            android:layout_marginBottom="14dp" />
+
+        <!-- Result Box (Initially hidden) -->
+        <LinearLayout
+            android:id="@+id/layoutScanResult"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@drawable/search_bar_bg"
+            android:padding="16dp"
+            android:visibility="gone"
+            android:layout_marginBottom="14dp">
+
+            <TextView
+                android:id="@+id/tvScanResultTitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="✓ Odczytano Kod QR"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:textColor="#059669"
+                android:layout_marginBottom="4dp" />
+
+            <TextView
+                android:id="@+id/tvScanResultText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="https://instagram.com/znajomy"
+                android:textSize="12sp"
+                android:textColor="@color/text_primary"
+                android:layout_marginBottom="12dp" />
+
+            <Button
+                android:id="@+id/btnOpenScanUrl"
+                android:layout_width="match_parent"
+                android:layout_height="42dp"
+                android:text="🚀 Otwórz Profil / Link"
+                android:textSize="13sp"
+                android:textStyle="bold"
+                android:textColor="@color/white"
+                android:background="@drawable/btn_pill_dark"
+                android:layout_marginBottom="6dp" />
+
+            <Button
+                android:id="@+id/btnSaveScannedQr"
+                android:layout_width="match_parent"
+                android:layout_height="40dp"
+                android:text="➕ Zapisz do Moich Wizytówek"
+                android:textSize="12sp"
+                android:textColor="@color/accent"
+                android:background="@drawable/btn_pill_light" />
+        </LinearLayout>
+
+        <Button
+            android:id="@+id/btnCloseScanner"
+            android:layout_width="match_parent"
+            android:layout_height="40dp"
+            android:text="Zamknij"
+            android:textSize="13sp"
+            android:textColor="@color/text_secondary"
+            android:background="@android:color/transparent" />
+
+    </LinearLayout>
+</ScrollView>

@@ -1,0 +1,327 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/layoutPaywall"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:visibility="gone"
+    android:scrollbars="none"
+    android:clipToPadding="false"
+    android:paddingTop="14dp"
+    android:paddingBottom="130dp"
+    android:paddingHorizontal="20dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <!-- Benefits & Freedom Card -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@drawable/card_bg"
+            android:padding="20dp"
+            android:layout_marginBottom="16dp"
+            android:elevation="2dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginBottom="14dp">
+
+                <TextView
+                    android:layout_width="36dp"
+                    android:layout_height="36dp"
+                    android:background="@drawable/circle_action_btn_light"
+                    android:gravity="center"
+                    android:text="☕"
+                    android:textSize="18sp"
+                    android:layout_marginEnd="10dp" />
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="DropMe jest w 100% bezpłatny!"
+                        android:textSize="15sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/text_primary" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Wszystkie funkcje bez reklam i ograniczeń:"
+                        android:textSize="12sp"
+                        android:textColor="@color/text_secondary"
+                        android:layout_marginTop="2dp" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- Perk 1 -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginBottom="10dp">
+
+                <TextView
+                    android:layout_width="26dp"
+                    android:layout_height="26dp"
+                    android:background="@drawable/feature_check_icon"
+                    android:gravity="center"
+                    android:text="✓"
+                    android:textSize="13sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/text_primary"
+                    android:layout_marginEnd="10dp" />
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Nielimitowane kody QR bez sztucznych paywalli"
+                    android:textSize="13sp"
+                    android:textColor="@color/text_primary" />
+            </LinearLayout>
+
+            <!-- Perk 2 -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginBottom="10dp">
+
+                <TextView
+                    android:layout_width="26dp"
+                    android:layout_height="26dp"
+                    android:background="@drawable/feature_check_icon"
+                    android:gravity="center"
+                    android:text="✓"
+                    android:textSize="13sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/text_primary"
+                    android:layout_marginEnd="10dp" />
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Wszystkie kolory QR: Obsidian, Royal Blue, Gold, Emerald, Violet"
+                    android:textSize="13sp"
+                    android:textColor="@color/text_primary" />
+            </LinearLayout>
+
+            <!-- Perk 3 -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginBottom="10dp">
+
+                <TextView
+                    android:layout_width="26dp"
+                    android:layout_height="26dp"
+                    android:background="@drawable/feature_check_icon"
+                    android:gravity="center"
+                    android:text="✓"
+                    android:textSize="13sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/text_primary"
+                    android:layout_marginEnd="10dp" />
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Generowanie kodów QR w 100% offline (ZXing, bez API)"
+                    android:textSize="13sp"
+                    android:textColor="@color/text_primary" />
+            </LinearLayout>
+
+            <!-- Perk 4 -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <TextView
+                    android:layout_width="26dp"
+                    android:layout_height="26dp"
+                    android:background="@drawable/feature_check_icon"
+                    android:gravity="center"
+                    android:text="✓"
+                    android:textSize="13sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/text_primary"
+                    android:layout_marginEnd="10dp" />
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Wizytówka Multi-Link 'Wszystko w 1' oraz wbudowany skaner QR"
+                    android:textSize="13sp"
+                    android:textColor="@color/text_primary" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- Tip Options (Voluntary Support) -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginBottom="18dp">
+
+            <!-- Plan 1: Big Coffee (10 zł) -->
+            <LinearLayout
+                android:id="@+id/planYearly"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:background="@drawable/plan_selected_bg"
+                android:padding="16dp"
+                android:layout_marginBottom="12dp"
+                android:elevation="1dp">
+
+                <!-- Radio icon -->
+                <TextView
+                    android:id="@+id/tvRadioYearly"
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:text="●"
+                    android:textSize="18sp"
+                    android:textColor="@color/text_primary"
+                    android:gravity="center"
+                    android:layout_marginEnd="12dp" />
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/tvPlanYearlyTitle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Duża kawa z ciastkiem ☕🍰"
+                        android:textSize="15sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/text_primary" />
+
+                    <TextView
+                        android:id="@+id/tvPlanYearlySub"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Dobrowolny datek na rozwój aplikacji"
+                        android:textSize="12sp"
+                        android:textColor="@color/text_secondary"
+                        android:layout_marginTop="2dp" />
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/tvPlanYearlyPrice"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="10,00 zł"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/text_primary"
+                    android:layout_marginStart="8dp" />
+            </LinearLayout>
+
+            <!-- Plan 2: Small Coffee (5 zł) -->
+            <LinearLayout
+                android:id="@+id/planMonthly"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:background="@drawable/plan_unselected_bg"
+                android:padding="16dp"
+                android:elevation="1dp">
+
+                <!-- Radio icon -->
+                <TextView
+                    android:id="@+id/tvRadioMonthly"
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:text="○"
+                    android:textSize="18sp"
+                    android:textColor="@color/text_secondary"
+                    android:gravity="center"
+                    android:layout_marginEnd="12dp" />
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/tvPlanMonthlyTitle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Małe espresso ☕"
+                        android:textSize="15sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/text_primary" />
+
+                    <TextView
+                        android:id="@+id/tvPlanMonthlySub"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Symboliczny uśmiech dla twórcy"
+                        android:textSize="12sp"
+                        android:textColor="@color/text_secondary"
+                        android:layout_marginTop="2dp" />
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/tvPlanMonthlyPrice"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="5,00 zł"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/text_primary"
+                    android:layout_marginStart="8dp" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- Buy Action Button -->
+        <Button
+            android:id="@+id/btnBuyPremium"
+            android:layout_width="match_parent"
+            android:layout_height="54dp"
+            android:text="☕ POSTAW KAWĘ PRZEZ PAYPAL"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:background="@drawable/btn_pill_paypal"
+            android:textColor="@color/white"
+            android:layout_marginBottom="12dp" />
+
+        <TextView
+            android:id="@+id/tvPaywallStatusMsg"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:text="🔒 Bezpieczna płatność w Twojej przeglądarce przez PayPal"
+            android:textSize="12sp"
+            android:textColor="@color/text_secondary" />
+    </LinearLayout>
+</ScrollView>

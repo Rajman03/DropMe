@@ -1,0 +1,219 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@drawable/card_bg"
+    android:padding="20dp">
+
+    <!-- Header with Icon and Close Button -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginBottom="16dp">
+
+        <ImageView
+            android:layout_width="38dp"
+            android:layout_height="38dp"
+            android:src="@drawable/ic_dropme_logo"
+            android:contentDescription="DropMe Logo"
+            android:layout_marginEnd="12dp" />
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Polityka Prywatności"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:textColor="@color/text_primary" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="DropMe • Ochrona Danych i RODO"
+                android:textSize="12sp"
+                android:textColor="@color/text_secondary"
+                android:layout_marginTop="2dp" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/btnPrivacyCloseTop"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:gravity="center"
+            android:text="✕"
+            android:textSize="16sp"
+            android:textColor="@color/text_secondary"
+            android:background="@drawable/circle_action_btn_light"
+            android:clickable="true"
+            android:focusable="true" />
+    </LinearLayout>
+
+    <!-- Quick Highlights Badges Row -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginBottom="14dp">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:text="🔒 Baza Lokalna"
+            android:textSize="10sp"
+            android:textStyle="bold"
+            android:textColor="#FFFFFF"
+            android:background="@drawable/badge_status_ok"
+            android:paddingVertical="5dp"
+            android:layout_marginEnd="4dp" />
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:text="📷 Skaner QR: Bezpieczny"
+            android:textSize="10sp"
+            android:textStyle="bold"
+            android:textColor="#2563EB"
+            android:background="@drawable/badge_status_info"
+            android:paddingVertical="5dp"
+            android:layout_marginEnd="4dp" />
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:text="🚫 Zero Trackerów"
+            android:textSize="10sp"
+            android:textStyle="bold"
+            android:textColor="#7C3AED"
+            android:background="@drawable/badge_status_info"
+            android:paddingVertical="5dp" />
+    </LinearLayout>
+
+    <!-- Scrollable Detailed Policy Content -->
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="320dp"
+        android:scrollbars="vertical"
+        android:background="#F8FAFC"
+        android:padding="14dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <!-- Intro -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Aplikacja DropMe została zaprojektowana z priorytetem ochrony prywatności użytkownika (zasada Privacy by Design oraz Data Minimization). Poniżej znajdziesz przejrzyste informacje o tym, jakie dane przetwarzamy, w jakim celu i jak nad nimi panujesz."
+                android:textSize="12sp"
+                android:textColor="@color/text_primary"
+                android:lineSpacingMultiplier="1.25"
+                android:layout_marginBottom="12dp" />
+
+            <!-- SECTION 1: Jakie dane zbiera aplikacja -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="1. Jakie dane zbiera aplikacja DropMe?"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:textColor="@color/text_primary"
+                android:layout_marginBottom="6dp" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="• Dane profilu i kontaktów:\nImię, nazwisko, nagłówek bio, numer telefonu, adres e-mail oraz linki do Twoich kont społecznościowych (TikTok, Instagram, LinkedIn, YouTube, Facebook itp.). Dane te wprowadzasz dobrowolnie i są one przechowywane wyłącznie w lokalnej bazie danych Twojego urządzenia.\n\n• Skanowanie kodów QR (Zero niebezpiecznych uprawnień):\nAplikacja NIE wymaga uprawnienia CAMERA w systemie. Uruchomienie aparatu lub wybór zdjęcia z galerii odbywa się całkowicie bezpiecznie za pośrednictwem systemowej aplikacji aparatu/galerii (System Intent). DropMe nie ma bezpośredniego dostępu do sprzętu kamery w tle ani nie wywołuje ostrzeżeń o bezpieczeństwie przy instalacji.\n\n• Dostęp do sieci (android.permission.INTERNET):\nUżywany wyłącznie wtedy, gdy zdecydujesz się opublikować lub udostępnić swoją wizytówkę Multi-Link (poprzez platformę Telegraph), pobrać monogram/awatar lub skorzystać z opcjonalnej synchronizacji konta w chmurze.\n\n• Bezpieczeństwo i kod PIN:\nKody PIN oraz poświadczenia są haszowane kryptograficznie (SHA-256) na Twoim urządzeniu i nie są przechowywane w postaci otwartego tekstu."
+                android:textSize="12sp"
+                android:textColor="#334155"
+                android:lineSpacingMultiplier="1.25"
+                android:layout_marginBottom="14dp" />
+
+            <!-- SECTION 2: Czego NIE zbieramy -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="2. Czego DropMe NIGDY nie zbiera?"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:textColor="@color/text_primary"
+                android:layout_marginBottom="6dp" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="• NIE gromadzimy danych geolokalizacyjnych (GPS).\n• NIE odczytujemy Twojej prywatnej książki kontaktów w telefonie.\n• NIE monitorujemy aktywności w innych aplikacjach.\n• NIE integrujemy zewnętrznych SDK reklamowych ani narzędzi telemetrii szpiegującej.\n• NIE sprzedajemy ani nie profilujemy Twoich danych marketingowo."
+                android:textSize="12sp"
+                android:textColor="#334155"
+                android:lineSpacingMultiplier="1.25"
+                android:layout_marginBottom="14dp" />
+
+            <!-- SECTION 3: Twoje Prawa -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="3. Twoje Prawa i Kontrola Danych (RODO)"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:textColor="@color/text_primary"
+                android:layout_marginBottom="6dp" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="• Prawo do usunięcia danych (Prawo do bycia zapomnianym):\nW każdej chwili możesz edytować lub bezpowrotnie usunąć kody QR, wpisy i cały swój profil z poziomu ustawień aplikacji.\n\n• Odinstalowanie aplikacji:\nUsunięcie aplikacji DropMe z telefonu skutkuje natychmiastowym i bezpowrotnym skasowaniem wszystkich lokalnie zapisanych profili, kodów i historii.\n\n• Eksport i udostępnianie:\nMasz pełną kontrolę nad tym, jakie linki i dane umieszczasz na swojej wizytówce cyfrowej."
+                android:textSize="12sp"
+                android:textColor="#334155"
+                android:lineSpacingMultiplier="1.25"
+                android:layout_marginBottom="14dp" />
+
+            <!-- SECTION 4: Administrator i Kontakt -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="4. Administrator i Kontakt"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:textColor="@color/text_primary"
+                android:layout_marginBottom="6dp" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Administratorem aplikacji jest zespół DropMe. W razie pytań dotyczących prywatności lub obsługi danych, skontaktuj się bezpośrednio przez oficjalne kanały wsparcia aplikacji."
+                android:textSize="12sp"
+                android:textColor="#334155"
+                android:lineSpacingMultiplier="1.25" />
+
+        </LinearLayout>
+    </ScrollView>
+
+    <!-- Bottom Action Button -->
+    <Button
+        android:id="@+id/btnPrivacyAccept"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:text="Rozumiem i akceptuję"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        android:textColor="@color/white"
+        android:background="@drawable/btn_pill_dark"
+        android:layout_marginTop="16dp" />
+
+</LinearLayout>
