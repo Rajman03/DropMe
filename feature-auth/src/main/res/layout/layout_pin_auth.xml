@@ -15,7 +15,7 @@
         android:gravity="center_horizontal"
         android:paddingHorizontal="24dp"
         android:paddingTop="28dp"
-        android:paddingBottom="24dp">
+        android:paddingBottom="20dp">
 
         <!-- Top Notch / Dynamic Island pill -->
         <View
@@ -30,11 +30,11 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Enter current PIN"
-            android:textSize="22sp"
+            android:textSize="24sp"
             android:textStyle="bold"
             android:textColor="#0F172A"
             android:gravity="center"
-            android:layout_marginBottom="6dp" />
+            android:layout_marginBottom="8dp" />
 
         <!-- Subtitle -->
         <TextView
@@ -42,10 +42,10 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Weryfikacja konta Administratora"
-            android:textSize="13sp"
+            android:textSize="14sp"
             android:textColor="#64748B"
             android:gravity="center"
-            android:layout_marginBottom="24dp" />
+            android:layout_marginBottom="28dp" />
 
         <!-- 4 PIN Entry Boxes Row -->
         <LinearLayout
@@ -54,15 +54,15 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:gravity="center"
-            android:layout_marginBottom="12dp">
+            android:layout_marginBottom="10dp">
 
             <!-- Box 1 -->
             <FrameLayout
                 android:id="@+id/pinBox1"
-                android:layout_width="58dp"
-                android:layout_height="58dp"
+                android:layout_width="64dp"
+                android:layout_height="64dp"
                 android:background="@drawable/pin_box_empty"
-                android:layout_marginHorizontal="6dp">
+                android:layout_marginHorizontal="7dp">
 
                 <TextView
                     android:id="@+id/tvPinDigit1"
@@ -78,10 +78,10 @@
             <!-- Box 2 -->
             <FrameLayout
                 android:id="@+id/pinBox2"
-                android:layout_width="58dp"
-                android:layout_height="58dp"
+                android:layout_width="64dp"
+                android:layout_height="64dp"
                 android:background="@drawable/pin_box_empty"
-                android:layout_marginHorizontal="6dp">
+                android:layout_marginHorizontal="7dp">
 
                 <TextView
                     android:id="@+id/tvPinDigit2"
@@ -97,10 +97,10 @@
             <!-- Box 3 -->
             <FrameLayout
                 android:id="@+id/pinBox3"
-                android:layout_width="58dp"
-                android:layout_height="58dp"
+                android:layout_width="64dp"
+                android:layout_height="64dp"
                 android:background="@drawable/pin_box_empty"
-                android:layout_marginHorizontal="6dp">
+                android:layout_marginHorizontal="7dp">
 
                 <TextView
                     android:id="@+id/tvPinDigit3"
@@ -116,10 +116,10 @@
             <!-- Box 4 -->
             <FrameLayout
                 android:id="@+id/pinBox4"
-                android:layout_width="58dp"
-                android:layout_height="58dp"
+                android:layout_width="64dp"
+                android:layout_height="64dp"
                 android:background="@drawable/pin_box_empty"
-                android:layout_marginHorizontal="6dp">
+                android:layout_marginHorizontal="7dp">
 
                 <TextView
                     android:id="@+id/tvPinDigit4"
@@ -139,28 +139,33 @@
             android:layout_width="wrap_content"
             android:layout_height="22dp"
             android:text=""
-            android:textSize="12sp"
+            android:textSize="13sp"
             android:textStyle="bold"
             android:textColor="@color/expense_red"
-            android:gravity="center"
-            android:layout_marginBottom="20dp" />
+            android:gravity="center" />
+
+        <!-- Flexible spacer: pushes keypad to the vertical middle -->
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:minHeight="16dp" />
 
         <!-- Custom Numeric Keypad -->
         <TableLayout
             android:id="@+id/pinKeypadLayout"
-            android:layout_width="280dp"
+            android:layout_width="312dp"
             android:layout_height="wrap_content"
-            android:stretchColumns="*"
-            android:layout_marginBottom="20dp">
+            android:stretchColumns="*">
 
             <!-- Row 1: 1, 2, 3 -->
-            <TableRow android:gravity="center" android:layout_marginBottom="12dp">
+            <TableRow android:gravity="center" android:layout_marginBottom="14dp">
                 <TextView
                     android:id="@+id/btnKey1"
-                    android:layout_width="72dp"
-                    android:layout_height="64dp"
+                    android:layout_width="88dp"
+                    android:layout_height="72dp"
                     android:text="1"
-                    android:textSize="26sp"
+                    android:textSize="28sp"
                     android:textStyle="bold"
                     android:textColor="#0F172A"
                     android:gravity="center"
@@ -169,10 +174,10 @@
                     android:focusable="true" />
                 <TextView
                     android:id="@+id/btnKey2"
-                    android:layout_width="72dp"
-                    android:layout_height="64dp"
+                    android:layout_width="88dp"
+                    android:layout_height="72dp"
                     android:text="2"
-                    android:textSize="26sp"
+                    android:textSize="28sp"
                     android:textStyle="bold"
                     android:textColor="#0F172A"
                     android:gravity="center"
@@ -181,10 +186,10 @@
                     android:focusable="true" />
                 <TextView
                     android:id="@+id/btnKey3"
-                    android:layout_width="72dp"
-                    android:layout_height="64dp"
+                    android:layout_width="88dp"
+                    android:layout_height="72dp"
                     android:text="3"
-                    android:textSize="26sp"
+                    android:textSize="28sp"
                     android:textStyle="bold"
                     android:textColor="#0F172A"
                     android:gravity="center"
@@ -194,13 +199,13 @@
             </TableRow>
 
             <!-- Row 2: 4, 5, 6 -->
-            <TableRow android:gravity="center" android:layout_marginBottom="12dp">
+            <TableRow android:gravity="center" android:layout_marginBottom="14dp">
                 <TextView
                     android:id="@+id/btnKey4"
-                    android:layout_width="72dp"
-                    android:layout_height="64dp"
+                    android:layout_width="88dp"
+                    android:layout_height="72dp"
                     android:text="4"
-                    android:textSize="26sp"
+                    android:textSize="28sp"
                     android:textStyle="bold"
                     android:textColor="#0F172A"
                     android:gravity="center"
@@ -209,10 +214,10 @@
                     android:focusable="true" />
                 <TextView
                     android:id="@+id/btnKey5"
-                    android:layout_width="72dp"
-                    android:layout_height="64dp"
+                    android:layout_width="88dp"
+                    android:layout_height="72dp"
                     android:text="5"
-                    android:textSize="26sp"
+                    android:textSize="28sp"
                     android:textStyle="bold"
                     android:textColor="#0F172A"
                     android:gravity="center"
@@ -221,10 +226,10 @@
                     android:focusable="true" />
                 <TextView
                     android:id="@+id/btnKey6"
-                    android:layout_width="72dp"
-                    android:layout_height="64dp"
+                    android:layout_width="88dp"
+                    android:layout_height="72dp"
                     android:text="6"
-                    android:textSize="26sp"
+                    android:textSize="28sp"
                     android:textStyle="bold"
                     android:textColor="#0F172A"
                     android:gravity="center"
@@ -234,13 +239,13 @@
             </TableRow>
 
             <!-- Row 3: 7, 8, 9 -->
-            <TableRow android:gravity="center" android:layout_marginBottom="12dp">
+            <TableRow android:gravity="center" android:layout_marginBottom="14dp">
                 <TextView
                     android:id="@+id/btnKey7"
-                    android:layout_width="72dp"
-                    android:layout_height="64dp"
+                    android:layout_width="88dp"
+                    android:layout_height="72dp"
                     android:text="7"
-                    android:textSize="26sp"
+                    android:textSize="28sp"
                     android:textStyle="bold"
                     android:textColor="#0F172A"
                     android:gravity="center"
@@ -249,10 +254,10 @@
                     android:focusable="true" />
                 <TextView
                     android:id="@+id/btnKey8"
-                    android:layout_width="72dp"
-                    android:layout_height="64dp"
+                    android:layout_width="88dp"
+                    android:layout_height="72dp"
                     android:text="8"
-                    android:textSize="26sp"
+                    android:textSize="28sp"
                     android:textStyle="bold"
                     android:textColor="#0F172A"
                     android:gravity="center"
@@ -261,10 +266,10 @@
                     android:focusable="true" />
                 <TextView
                     android:id="@+id/btnKey9"
-                    android:layout_width="72dp"
-                    android:layout_height="64dp"
+                    android:layout_width="88dp"
+                    android:layout_height="72dp"
                     android:text="9"
-                    android:textSize="26sp"
+                    android:textSize="28sp"
                     android:textStyle="bold"
                     android:textColor="#0F172A"
                     android:gravity="center"
@@ -277,15 +282,15 @@
             <TableRow android:gravity="center">
                 <FrameLayout
                     android:id="@+id/btnKeyFingerprint"
-                    android:layout_width="72dp"
-                    android:layout_height="64dp"
+                    android:layout_width="88dp"
+                    android:layout_height="72dp"
                     android:background="@drawable/pin_key_bg"
                     android:clickable="true"
                     android:focusable="true">
 
                     <ImageView
-                        android:layout_width="26dp"
-                        android:layout_height="26dp"
+                        android:layout_width="30dp"
+                        android:layout_height="30dp"
                         android:layout_gravity="center"
                         android:src="@drawable/ic_fingerprint"
                         android:contentDescription="Biometria / Reset" />
@@ -293,10 +298,10 @@
 
                 <TextView
                     android:id="@+id/btnKey0"
-                    android:layout_width="72dp"
-                    android:layout_height="64dp"
+                    android:layout_width="88dp"
+                    android:layout_height="72dp"
                     android:text="0"
-                    android:textSize="26sp"
+                    android:textSize="28sp"
                     android:textStyle="bold"
                     android:textColor="#0F172A"
                     android:gravity="center"
@@ -306,15 +311,15 @@
 
                 <FrameLayout
                     android:id="@+id/btnKeyBackspace"
-                    android:layout_width="72dp"
-                    android:layout_height="64dp"
+                    android:layout_width="88dp"
+                    android:layout_height="72dp"
                     android:background="@drawable/pin_key_bg"
                     android:clickable="true"
                     android:focusable="true">
 
                     <ImageView
-                        android:layout_width="24dp"
-                        android:layout_height="24dp"
+                        android:layout_width="28dp"
+                        android:layout_height="28dp"
                         android:layout_gravity="center"
                         android:src="@drawable/ic_backspace_arrow"
                         android:contentDescription="Usuń cyfrę" />
@@ -322,29 +327,36 @@
             </TableRow>
         </TableLayout>
 
+        <!-- Flexible spacer: pins the links to the bottom -->
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:minHeight="16dp" />
+
         <!-- Forgot your PIN / Back to Login -->
         <TextView
             android:id="@+id/btnPinForgot"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Forgot your pin?"
+            android:text="Zapomniałeś kodu PIN?"
             android:textSize="14sp"
-            android:textColor="#94A3B8"
-            android:paddingVertical="8dp"
+            android:textColor="#64748B"
+            android:paddingVertical="10dp"
             android:paddingHorizontal="16dp"
             android:clickable="true"
             android:focusable="true"
-            android:layout_marginBottom="4dp" />
+            android:layout_marginBottom="2dp" />
 
         <TextView
             android:id="@+id/btnPinBackToLogin"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="← Wróć do logowania"
-            android:textSize="13sp"
+            android:textSize="14sp"
             android:textStyle="bold"
             android:textColor="#0D6EFD"
-            android:paddingVertical="8dp"
+            android:paddingVertical="10dp"
             android:paddingHorizontal="16dp"
             android:clickable="true"
             android:focusable="true" />

@@ -2,6 +2,10 @@
 
 **Wszystkie Twoje linki w jednym kodzie QR.**
 
+> Najnowsza zmiana (v5.5): odświeżony ekran weryfikacji PIN — większe pola kodu
+> i klawiatura numeryczna, lepsze rozłożenie elementów na ekranie (nagłówek u góry,
+> klawiatura w środku, skróty na dole) oraz polonizacja napisu pomocowego.
+
 DropMe to lekka aplikacja na Androida, która zamienia profile w mediach społecznościowych
 w jeden zeskanowalny kod QR. Tworzysz wizytówkę, dodajesz konta i linki, a druga osoba
 skanuje kod i od razu trafia na właściwe miejsce — bez przepisywania nicków.
@@ -18,7 +22,7 @@ Efektem jest APK poniżej 200 kB.
 |---|---|
 | **Plik** | [`app-release.apk`](app-release.apk) |
 | **Wersja** | 5.5 (versionCode 21) |
-| **Rozmiar** | ~172 kB |
+| **Rozmiar** | ~169 kB |
 | **Android** | 7.0 (API 24) i nowszy |
 | **Podpis** | klucz release (`CN=DropMe Release`), schematy v1 + v2 + v3 |
 
@@ -53,7 +57,7 @@ klienckiej.
 | versionCode / versionName | 21 / 5.5 |
 | minSdk / targetSdk | 24 / 36 |
 | Zasoby | 333 |
-| Rozmiar `classes.dex` | ~149 kB |
+| Rozmiar `classes.dex` | ~148 kB |
 | Minifikacja | R8 + `shrinkResources` |
 | Zależności UI | brak |
 
@@ -237,7 +241,7 @@ najłatwiej psuje się po cichu:
   środowiskowych, poza repozytorium.
 - Klucz podpisywania, pliki APK z danymi debugowania i prywatne załączniki są
   wykluczone przez `.gitignore`.
-- Rozmiar kodu ogranicza powierzchnię ataku: 172 kB APK bez zewnętrznych bibliotek UI.
+- Rozmiar kodu ogranicza powierzchnię ataku: ~169 kB APK bez zewnętrznych bibliotek UI.
 - Dołączony APK jest budowany bez prywatnych tokenów — patrz „Build do publikacji”.
 
 **Wymaga dokończenia przed publicznym wdrożeniem:**
