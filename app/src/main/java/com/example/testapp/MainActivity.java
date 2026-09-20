@@ -99,6 +99,13 @@ public class MainActivity extends Activity {
         final View dock = findViewById(R.id.dockDynamicIsland);
         if (root == null) return;
 
+        // Ekran bez paska nagłówkowego (PIN, logowanie): treść musi się podnieść
+        // nad pasek gestów, inaczej ostatni link chowa się pod nawigacją systemową.
+        final View pinContent = findViewById(R.id.pinAuthContent);
+        final View authContent = findViewById(R.id.authContent);
+        final int pinBasePaddingBottom = pinContent != null ? pinContent.getPaddingBottom() : 0;
+        final int authBasePaddingBottom = authContent != null ? authContent.getPaddingBottom() : 0;
+
         final int headerBasePaddingTop = header != null ? header.getPaddingTop() : 0;
 
         final int dockBaseMarginBottom;
@@ -122,6 +129,16 @@ public class MainActivity extends Activity {
                 ViewGroup.MarginLayoutParams params = (ViewGroup.MarginLayoutParams) dock.getLayoutParams();
                 params.bottomMargin = dockBaseMarginBottom + bars.bottom;
                 dock.setLayoutParams(params);
+            }
+
+            if (pinContent != null) {
+                pinContent.setPadding(pinContent.getPaddingLeft(), pinContent.getPaddingTop(),
+                        pinContent.getPaddingRight(), pinBasePaddingBottom + bars.bottom);
+            }
+
+            if (authContent != null) {
+                authContent.setPadding(authContent.getPaddingLeft(), authContent.getPaddingTop(),
+                        authContent.getPaddingRight(), authBasePaddingBottom + bars.bottom);
             }
 
             return WindowInsets.CONSUMED;

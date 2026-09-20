@@ -9,6 +9,7 @@
     android:background="#F8FAFC">
 
     <LinearLayout
+        android:id="@+id/pinAuthContent"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
