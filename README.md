@@ -39,12 +39,31 @@ https://github.com/<twoj-login>/<repo>/raw/main/app-release.apk
 
 1. Skopiuj APK na telefon (albo pobierz go bezpośrednio na urządzeniu).
 2. Otwórz plik i zezwól na instalację z nieznanych źródeł, jeśli system o to poprosi.
-3. Jeśli masz zainstalowaną wcześniejszą wersję podpisaną **innym kluczem**
-   (np. build debug), najpierw ją odinstaluj — Android nie pozwala nadpisać
-   aplikacji o innym podpisie.
 
-> Aplikacja jest rozpowszechniana poza Google Play, więc Play Protect może pokazać
-> jednorazowy komunikat o niezweryfikowanym deweloperze. To normalne dla sideloadu.
+#### ⚠️ Konflikt podpisu („Aplikacja nie została zainstalowana")
+
+Wersja **5.6 z 21.09 (poprzedni wieczór)** została podpisana innym kluczem niż
+pozostałe wydania. Android nie pozwala nadpisać aplikacji innym podpisem, więc
+jeśli masz dokładnie tę wersję, aktualizacja zawsze się nie powiedzie. Rozwiązanie
+jednorazowe:
+
+1. **Odinstaluj** DropMe z telefonu (dane profilu wrócą po zalogowaniu — są w Supabase,
+   a kody QR zapisane w chmurze się zsynchronizują).
+2. Zainstaluj najnowszy `app-release.apk` (5.7 lub nowszy).
+3. Kolejne aktualizacje pójdą już normalnie „na wierzch” — podpis jest od teraz spójny.
+
+#### 🛡️ Ekran Google Play Protect przy instalacji
+
+Aplikacja jest dystrybuowana poza Google Play, więc Play Protect może pokazać ekran
+z logo Google („Aplikacja niezweryfikowana” / „niebezpieczna”). To normalne dla
+sideloadu:
+
+- dotknij **Szczegóły** / „Więcej”, a następnie **Zainstaluj mimo to**,
+- albo na czas instalacji wyłącz skanowanie: Sklep Play → **Play Protect** →
+  koło zębate → wyłącz **Skanowanie aplikacji w Play Protect**.
+
+> Nie da się tego „naprawić” w kodzie aplikacji — to zabezpieczenie Androida dla
+> aplikacji spoza Sklepu.
 
 <details>
 <summary>Co dokładnie znajduje się w tym APK</summary>
