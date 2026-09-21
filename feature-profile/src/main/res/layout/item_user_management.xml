@@ -124,20 +124,6 @@
             android:layout_marginEnd="8dp"
             android:visibility="gone" />
 
-        <!-- Change Admin PIN (Creator only) -->
-        <Button
-            android:id="@+id/btnUserItemChangePin"
-            android:layout_width="wrap_content"
-            android:layout_height="36dp"
-            android:text="Zmień PIN"
-            android:textSize="11sp"
-            android:textStyle="bold"
-            android:textColor="@color/text_primary"
-            android:background="@drawable/btn_pill_light"
-            android:paddingHorizontal="10dp"
-            android:layout_marginEnd="8dp"
-            android:visibility="gone" />
-
         <!-- Premium toggle -->
         <Button
             android:id="@+id/btnUserItemTogglePremium"

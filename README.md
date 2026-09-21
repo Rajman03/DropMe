@@ -2,9 +2,11 @@
 
 **Wszystkie Twoje linki w jednym kodzie QR.**
 
-> Najnowsza zmiana (v5.5): odświeżony ekran weryfikacji PIN — większe pola kodu
-> i klawiatura numeryczna, lepsze rozłożenie elementów na ekranie (nagłówek u góry,
-> klawiatura w środku, skróty na dole) oraz polonizacja napisu pomocowego.
+> Najnowsza zmiana (v5.7): uproszczenie panelu zarządzania użytkownikami — zmiana
+> PIN-u odbywa się wyłącznie w Profilu użytkownika (panel nie pozwala już zmieniać
+> PIN-u Twórcy, adminów ani własnego). Poprawki w Paywall: blokada podwójnych
+> zakupów (debounce), naprawiony tekst „dodatkowej kawy" po zakupie Premium oraz
+> jasny komunikat przy kolejnym wsparciu.
 
 DropMe to lekka aplikacja na Androida, która zamienia profile w mediach społecznościowych
 w jeden zeskanowalny kod QR. Tworzysz wizytówkę, dodajesz konta i linki, a druga osoba
@@ -21,8 +23,8 @@ Efektem jest APK poniżej 200 kB.
 | | |
 |---|---|
 | **Plik** | [`app-release.apk`](app-release.apk) |
-| **Wersja** | 5.5 (versionCode 21) |
-| **Rozmiar** | ~169 kB |
+| **Wersja** | 5.7 (versionCode 23) |
+| **Rozmiar** | ~199 kB |
 | **Android** | 7.0 (API 24) i nowszy |
 | **Podpis** | klucz release (`CN=DropMe Release`), schematy v1 + v2 + v3 |
 
@@ -54,7 +56,7 @@ klienckiej.
 
 | | |
 |---|---|
-| versionCode / versionName | 21 / 5.5 |
+| versionCode / versionName | 23 / 5.7 |
 | minSdk / targetSdk | 24 / 36 |
 | Zasoby | 333 |
 | Rozmiar `classes.dex` | ~148 kB |

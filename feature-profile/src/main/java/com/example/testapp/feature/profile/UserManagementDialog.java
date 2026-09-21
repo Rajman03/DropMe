@@ -119,7 +119,6 @@ public class UserManagementDialog {
                 TextView tvPurchasedBadge = itemView.findViewById(R.id.tvUserItemPurchasedBadge);
                 TextView tvNotice = itemView.findViewById(R.id.tvUserItemNotice);
                 Button btnToggleAdmin = itemView.findViewById(R.id.btnUserItemToggleAdmin);
-                Button btnChangePin = itemView.findViewById(R.id.btnUserItemChangePin);
                 Button btnTogglePremium = itemView.findViewById(R.id.btnUserItemTogglePremium);
                 TextView tvLockedNotice = itemView.findViewById(R.id.tvUserItemLockedNotice);
                 Button btnDelete = itemView.findViewById(R.id.btnUserItemDelete);
@@ -175,32 +174,16 @@ public class UserManagementDialog {
                 }
 
                 // ================= PERMISSION ACTION BUTTONS =================
-                if (btnChangePin != null) btnChangePin.setVisibility(View.GONE);
 
                 if (activeOperator.isCreator()) {
                     // Creator can manage everyone except other Creators
                     if (target.isCreator()) {
+                        // PIN Twórcy zmienia wyłącznie on sam (Profil użytkownika) -
+                        // żaden operator, nawet Creator, nie robi tego przez panel.
                         btnToggleAdmin.setVisibility(View.GONE);
-                        btnTogglePremium.setVisibility(View.GONE);                            tvLockedNotice.setVisibility(View.VISIBLE);
-                            tvLockedNotice.setText("Główny Twórca (Chroni system)");
-
-                            if (btnChangePin != null) {
-                                btnChangePin.setVisibility(View.VISIBLE);
-                                btnChangePin.setText("Zmień PIN");
-                            btnChangePin.setOnClickListener(v -> {
-                                PinSecurityManager.promptSetAdminPinDialog(context, target.getUsername(), newPin -> {
-                                    String[] err = new String[1];
-                                    PinSecurityManager.setCreatorPin(context, newPin);
-                                    if (authManager.updateUserPin(target.getUsername(), newPin, activeOperator, err)) {
-                                        Toast.makeText(context, "Zmieniono kod PIN Twórcy", Toast.LENGTH_SHORT).show();
-                                        renderList.run();
-                                        if (onUserUpdatedCallback != null) onUserUpdatedCallback.run();
-                                    } else {
-                                        Toast.makeText(context, err[0] != null ? err[0] : "Błąd", Toast.LENGTH_LONG).show();
-                                    }
-                                });
-                            });
-                        }
+                        btnTogglePremium.setVisibility(View.GONE);
+                        tvLockedNotice.setVisibility(View.VISIBLE);
+                        tvLockedNotice.setText("Główny Twórca (Chroni system)");
                     } else {
                         // Admin action button
                         btnToggleAdmin.setVisibility(View.VISIBLE);
@@ -220,22 +203,8 @@ public class UserManagementDialog {
                                 }
                             });
 
-                            if (btnChangePin != null) {
-                                btnChangePin.setVisibility(View.VISIBLE);
-                                btnChangePin.setText("Zmień PIN");
-                                btnChangePin.setOnClickListener(v -> {
-                                    PinSecurityManager.promptSetAdminPinDialog(context, target.getUsername(), newPin -> {
-                                        String[] err = new String[1];
-                                        if (authManager.updateUserPin(target.getUsername(), newPin, activeOperator, err)) {
-                                            Toast.makeText(context, "Zmieniono PIN dla @" + target.getUsername(), Toast.LENGTH_SHORT).show();
-                                            renderList.run();
-                                            if (onUserUpdatedCallback != null) onUserUpdatedCallback.run();
-                                        } else {
-                                            Toast.makeText(context, err[0] != null ? err[0] : "Błąd", Toast.LENGTH_LONG).show();
-                                        }
-                                    });
-                                });
-                            }
+                            // Zmiana PIN-u admina odbywa się w Profilu użytkownika,
+                            // nie przez panel zarządzania.
                         } else {
                             btnToggleAdmin.setText("Nadaj Admina");
                             btnToggleAdmin.setBackgroundResource(R.drawable.badge_admin);
@@ -310,23 +279,7 @@ public class UserManagementDialog {
                         tvLockedNotice.setVisibility(View.VISIBLE);
                         tvLockedNotice.setText("Brak uprawnień do edycji");
 
-                        if (btnChangePin != null && !target.isCreator() && activeOperator.getUsername().equalsIgnoreCase(target.getUsername())) {
-                            btnChangePin.setVisibility(View.VISIBLE);
-                            btnChangePin.setText("Zmień Mój PIN");
-                            btnChangePin.setOnClickListener(v -> {
-                                PinSecurityManager.promptSetAdminPinDialog(context, target.getUsername(), newPin -> {
-                                    String[] err = new String[1];
-                                    PinSecurityManager.setAdminPin(context, newPin);
-                                    if (authManager.updateUserPin(target.getUsername(), newPin, activeOperator, err)) {
-                                        Toast.makeText(context, "Zaktualizowano Twój PIN!", Toast.LENGTH_SHORT).show();
-                                        renderList.run();
-                                        if (onUserUpdatedCallback != null) onUserUpdatedCallback.run();
-                                    } else {
-                                        Toast.makeText(context, err[0] != null ? err[0] : "Błąd", Toast.LENGTH_LONG).show();
-                                    }
-                                });
-                            });
-                        }
+                        // Zmiana własnego PIN-u przez Profil użytkownika.
                     } else if (target.isPremium()) {
                         btnTogglePremium.setVisibility(View.GONE);
                         tvLockedNotice.setVisibility(View.VISIBLE);

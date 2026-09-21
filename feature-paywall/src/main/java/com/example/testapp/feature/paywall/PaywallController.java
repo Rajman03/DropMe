@@ -6,6 +6,7 @@ import com.example.testapp.core.UserProfile;
 import android.app.Activity;
 import android.content.Intent;
 import android.net.Uri;
+import android.os.SystemClock;
 import android.view.View;
 import android.widget.Button;
 import android.widget.LinearLayout;
@@ -31,6 +32,10 @@ public class PaywallController {
     private TextView tvPaywallStatusMsg;
 
     private boolean isBigCoffee = true;
+
+    // Anty-dubel: ignoruj kliknięcia szybsze niż 1,5 s od ostatniego otwarcia PayPal.
+    private static final long TIP_CLICK_DEBOUNCE_MS = 1500;
+    private long lastTipClickAt = 0L;
 
     public PaywallController(Activity activity, UserProfile userProfile, AuthManager authManager, OnPremiumPurchasedListener listener) {
         this.activity = activity;
@@ -81,9 +86,15 @@ public class PaywallController {
     }
 
     private void openPayPalSupport() {
+        long now = SystemClock.elapsedRealtime();
+        if (now - lastTipClickAt < TIP_CLICK_DEBOUNCE_MS) return; // blokada double-tap
+        lastTipClickAt = now;
+
         int amount = isBigCoffee ? 10 : 5;
         String planName = isBigCoffee ? "Duża Kawa (10 PLN)" : "Mała Kawa (5 PLN)";
         String url = "https://www.paypal.me/Rajman04/" + amount + "PLN";
+
+        boolean wasPremium = userProfile != null && userProfile.isPremium();
 
         // Aktywacja rangi Premium w Supabase i profilu
         if (authManager != null) {
@@ -101,7 +112,7 @@ public class PaywallController {
             tvPaywallStatusMsg.setVisibility(View.VISIBLE);
         }
 
-        if (listener != null) {
+        if (!wasPremium && listener != null) {
             listener.onPremiumPurchased();
         }
 
@@ -110,19 +121,29 @@ public class PaywallController {
             activity.startActivity(intent);
         } catch (Exception ignored) {}
 
-        Toast.makeText(activity, "⭐ Ranga Premium została aktywowana w Supabase! Dziękujemy za wsparcie! ❤️", Toast.LENGTH_LONG).show();
+        String msg = wasPremium
+                ? "☕ Dziękujemy za kolejne wsparcie! ❤️"
+                : "⭐ Ranga Premium została aktywowana w Supabase! Dziękujemy za wsparcie! ❤️";
+        Toast.makeText(activity, msg, Toast.LENGTH_LONG).show();
     }
 
     public void refreshViews() {
-        if (userProfile != null && userProfile.isPremium()) {
-            if (tvPaywallStatusMsg != null) {
+        boolean isPremium = userProfile != null && userProfile.isPremium();
+
+        if (tvPaywallStatusMsg != null) {
+            if (isPremium) {
                 tvPaywallStatusMsg.setText("⭐ Posiadasz aktywny status Premium!");
                 tvPaywallStatusMsg.setVisibility(View.VISIBLE);
-            }
-            if (btnTipPayPal != null) {
-                btnTipPayPal.setText(isBigCoffee ? "☕ POSTAW DODATKOWĄ DUŻĄ KAWĘ (10 ZŁ)" : "☕ POSTAW DODATKOWĄ MAŁĄ KAWĘ (5 ZŁ)");
+            } else {
+                tvPaywallStatusMsg.setVisibility(View.GONE);
             }
         }
-        updateSelection(isBigCoffee);
+        if (btnTipPayPal != null) {
+            if (isPremium) {
+                btnTipPayPal.setText(isBigCoffee ? "☕ POSTAW DODATKOWĄ DUŻĄ KAWĘ (10,00 ZŁ)" : "☕ POSTAW DODATKOWĄ MAŁĄ KAWĘ (5,00 ZŁ)");
+            } else {
+                btnTipPayPal.setText(isBigCoffee ? "☕ POSTAW DUŻĄ KAWĘ (10,00 ZŁ)" : "☕ POSTAW MAŁĄ KAWĘ (5,00 ZŁ)");
+            }
+        }
     }
 }
