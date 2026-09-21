@@ -52,6 +52,18 @@ public class UserManagementDialog {
 
         final AuthUser activeOperator = operator;
         View dialogView = LayoutInflater.from(context).inflate(R.layout.dialog_user_management, null, false);
+        dialogView.setFitsSystemWindows(true);
+        dialogView.setOnApplyWindowInsetsListener((v, insets) -> {
+            int bottomInset = insets.getSystemWindowInsetBottom();
+            int topInset = insets.getSystemWindowInsetTop();
+            v.setPadding(
+                    v.getPaddingLeft(),
+                    topInset > 0 ? topInset : v.getPaddingTop(),
+                    v.getPaddingRight(),
+                    bottomInset > 0 ? bottomInset + 16 : 56
+            );
+            return insets;
+        });
 
         Dialog dialog = new Dialog(context, android.R.style.Theme_DeviceDefault_Light_NoActionBar_Fullscreen);
         dialog.setContentView(dialogView);
@@ -70,13 +82,13 @@ public class UserManagementDialog {
         View btnBottomClose = dialogView.findViewById(R.id.btnBottomCloseManagement);
 
         if (activeOperator.isCreator()) {
-            tvOperatorRole.setText("👑 Zalogowano: Główny Twórca (Creator)");
+            tvOperatorRole.setText("Zalogowano: Główny Twórca (Creator)");
             tvPermissionsTitle.setText("Uprawnienia Twórcy (Pełne)");
-            tvPermissionsDesc.setText("Zarządzasz użytkownikami w chmurze Supabase.\n🔒 Zabezpieczenie: Nie możesz usunąć rangi Premium osobie, która kupiła ją w Paywall!");
+            tvPermissionsDesc.setText("Zarządzasz użytkownikami w chmurze Supabase. Zabezpieczenie: nie możesz usunąć rangi Premium osobie, która kupiła ją w Paywall.");
         } else {
-            tvOperatorRole.setText("🛡️ Zalogowano: Administrator (Admin)");
+            tvOperatorRole.setText("Zalogowano: Administrator (Admin)");
             tvPermissionsTitle.setText("Uprawnienia Administratora");
-            tvPermissionsDesc.setText("Zgodnie z uprawnieniami, możesz WYŁĄCZNIE nadawać rangę Premium użytkownikom, którzy jej jeszcze nie posiadają.");
+            tvPermissionsDesc.setText("Zgodnie z uprawnieniami możesz WYŁĄCZNIE nadawać rangę Premium użytkownikom, którzy jej jeszcze nie posiadają.");
         }
 
         final Runnable[] renderListHolder = new Runnable[1];
@@ -107,6 +119,7 @@ public class UserManagementDialog {
                 TextView tvPurchasedBadge = itemView.findViewById(R.id.tvUserItemPurchasedBadge);
                 TextView tvNotice = itemView.findViewById(R.id.tvUserItemNotice);
                 Button btnToggleAdmin = itemView.findViewById(R.id.btnUserItemToggleAdmin);
+                Button btnChangePin = itemView.findViewById(R.id.btnUserItemChangePin);
                 Button btnTogglePremium = itemView.findViewById(R.id.btnUserItemTogglePremium);
                 TextView tvLockedNotice = itemView.findViewById(R.id.tvUserItemLockedNotice);
                 Button btnDelete = itemView.findViewById(R.id.btnUserItemDelete);
@@ -162,18 +175,37 @@ public class UserManagementDialog {
                 }
 
                 // ================= PERMISSION ACTION BUTTONS =================
+                if (btnChangePin != null) btnChangePin.setVisibility(View.GONE);
+
                 if (activeOperator.isCreator()) {
                     // Creator can manage everyone except other Creators
                     if (target.isCreator()) {
                         btnToggleAdmin.setVisibility(View.GONE);
-                        btnTogglePremium.setVisibility(View.GONE);
-                        tvLockedNotice.setVisibility(View.VISIBLE);
-                        tvLockedNotice.setText("👑 Główny Twórca (Chroni system)");
+                        btnTogglePremium.setVisibility(View.GONE);                            tvLockedNotice.setVisibility(View.VISIBLE);
+                            tvLockedNotice.setText("Główny Twórca (Chroni system)");
+
+                            if (btnChangePin != null) {
+                                btnChangePin.setVisibility(View.VISIBLE);
+                                btnChangePin.setText("Zmień PIN");
+                            btnChangePin.setOnClickListener(v -> {
+                                PinSecurityManager.promptSetAdminPinDialog(context, target.getUsername(), newPin -> {
+                                    String[] err = new String[1];
+                                    PinSecurityManager.setCreatorPin(context, newPin);
+                                    if (authManager.updateUserPin(target.getUsername(), newPin, activeOperator, err)) {
+                                        Toast.makeText(context, "Zmieniono kod PIN Twórcy", Toast.LENGTH_SHORT).show();
+                                        renderList.run();
+                                        if (onUserUpdatedCallback != null) onUserUpdatedCallback.run();
+                                    } else {
+                                        Toast.makeText(context, err[0] != null ? err[0] : "Błąd", Toast.LENGTH_LONG).show();
+                                    }
+                                });
+                            });
+                        }
                     } else {
                         // Admin action button
                         btnToggleAdmin.setVisibility(View.VISIBLE);
                         if (target.isAdmin()) {
-                            btnToggleAdmin.setText("❌ Odbierz Admina");
+                            btnToggleAdmin.setText("Odbierz Admina");
                             btnToggleAdmin.setBackgroundResource(R.drawable.badge_expense);
                             btnToggleAdmin.setTextColor(context.getColor(R.color.expense_red));
                             btnToggleAdmin.setOnClickListener(v -> {
@@ -187,8 +219,25 @@ public class UserManagementDialog {
                                     Toast.makeText(context, err[0] != null ? err[0] : "Błąd", Toast.LENGTH_LONG).show();
                                 }
                             });
+
+                            if (btnChangePin != null) {
+                                btnChangePin.setVisibility(View.VISIBLE);
+                                btnChangePin.setText("Zmień PIN");
+                                btnChangePin.setOnClickListener(v -> {
+                                    PinSecurityManager.promptSetAdminPinDialog(context, target.getUsername(), newPin -> {
+                                        String[] err = new String[1];
+                                        if (authManager.updateUserPin(target.getUsername(), newPin, activeOperator, err)) {
+                                            Toast.makeText(context, "Zmieniono PIN dla @" + target.getUsername(), Toast.LENGTH_SHORT).show();
+                                            renderList.run();
+                                            if (onUserUpdatedCallback != null) onUserUpdatedCallback.run();
+                                        } else {
+                                            Toast.makeText(context, err[0] != null ? err[0] : "Błąd", Toast.LENGTH_LONG).show();
+                                        }
+                                    });
+                                });
+                            }
                         } else {
-                            btnToggleAdmin.setText("🛡️ Nadaj Admina");
+                            btnToggleAdmin.setText("Nadaj Admina");
                             btnToggleAdmin.setBackgroundResource(R.drawable.badge_admin);
                             btnToggleAdmin.setTextColor(context.getColor(R.color.white));
                             btnToggleAdmin.setOnClickListener(v -> {
@@ -214,12 +263,12 @@ public class UserManagementDialog {
                                 // CANNOT REVOKE PURCHASED PREMIUM!
                                 btnTogglePremium.setVisibility(View.GONE);
                                 tvLockedNotice.setVisibility(View.VISIBLE);
-                                tvLockedNotice.setText("🔒 Zakupione w Paywall (Nie można odebrać)");
+                                tvLockedNotice.setText("Zakupione w Paywall (Nie można odebrać)");
                             } else {
                                 // Can revoke manual premium
                                 btnTogglePremium.setVisibility(View.VISIBLE);
                                 tvLockedNotice.setVisibility(View.GONE);
-                                btnTogglePremium.setText("❌ Odbierz Premium");
+                                btnTogglePremium.setText("Odbierz Premium");
                                 btnTogglePremium.setBackgroundResource(R.drawable.badge_expense);
                                 btnTogglePremium.setTextColor(context.getColor(R.color.expense_red));
                                 btnTogglePremium.setOnClickListener(v -> {
@@ -237,7 +286,7 @@ public class UserManagementDialog {
                             // Target is Guest: Can grant Premium
                             btnTogglePremium.setVisibility(View.VISIBLE);
                             tvLockedNotice.setVisibility(View.GONE);
-                            btnTogglePremium.setText("⭐ Nadaj Premium");
+                            btnTogglePremium.setText("Nadaj Premium");
                             btnTogglePremium.setBackgroundResource(R.drawable.btn_pill_dark);
                             btnTogglePremium.setTextColor(context.getColor(R.color.white));
                             btnTogglePremium.setOnClickListener(v -> {
@@ -259,18 +308,36 @@ public class UserManagementDialog {
                     if (target.isCreator() || target.isAdmin()) {
                         btnTogglePremium.setVisibility(View.GONE);
                         tvLockedNotice.setVisibility(View.VISIBLE);
-                        tvLockedNotice.setText("🛡️ Brak uprawnień do edycji");
+                        tvLockedNotice.setText("Brak uprawnień do edycji");
+
+                        if (btnChangePin != null && !target.isCreator() && activeOperator.getUsername().equalsIgnoreCase(target.getUsername())) {
+                            btnChangePin.setVisibility(View.VISIBLE);
+                            btnChangePin.setText("Zmień Mój PIN");
+                            btnChangePin.setOnClickListener(v -> {
+                                PinSecurityManager.promptSetAdminPinDialog(context, target.getUsername(), newPin -> {
+                                    String[] err = new String[1];
+                                    PinSecurityManager.setAdminPin(context, newPin);
+                                    if (authManager.updateUserPin(target.getUsername(), newPin, activeOperator, err)) {
+                                        Toast.makeText(context, "Zaktualizowano Twój PIN!", Toast.LENGTH_SHORT).show();
+                                        renderList.run();
+                                        if (onUserUpdatedCallback != null) onUserUpdatedCallback.run();
+                                    } else {
+                                        Toast.makeText(context, err[0] != null ? err[0] : "Błąd", Toast.LENGTH_LONG).show();
+                                    }
+                                });
+                            });
+                        }
                     } else if (target.isPremium()) {
                         btnTogglePremium.setVisibility(View.GONE);
                         tvLockedNotice.setVisibility(View.VISIBLE);
                         tvLockedNotice.setText(target.isPurchasedPremium() 
-                                ? "🔒 Posiada zakupione Premium" 
-                                : "✓ Posiada Premium (Admin nie może odebrać)");
+                                ? "Posiada zakupione Premium" 
+                                : "Posiada Premium (Admin nie może odebrać)");
                     } else {
                         // User does NOT have Premium: Admin CAN grant it!
                         btnTogglePremium.setVisibility(View.VISIBLE);
                         tvLockedNotice.setVisibility(View.GONE);
-                        btnTogglePremium.setText("⭐ Nadaj Premium");
+                        btnTogglePremium.setText("Nadaj Premium");
                         btnTogglePremium.setBackgroundResource(R.drawable.badge_premium);
                         btnTogglePremium.setTextColor(context.getColor(R.color.white));
                         btnTogglePremium.setOnClickListener(v -> {
@@ -311,11 +378,11 @@ public class UserManagementDialog {
         });
 
         btnRefresh.setOnClickListener(v -> {
-            tvSupabaseSyncStatus.setText("⚡ Supabase: Pobieranie z chmury...");
+            tvSupabaseSyncStatus.setText("Supabase: Pobieranie z chmury...");
             btnRefresh.setEnabled(false);
             authManager.fetchAndSyncUsersFromSupabase(() -> {
                 btnRefresh.setEnabled(true);
-                tvSupabaseSyncStatus.setText("⚡ Supabase: Zsynchronizowano (" + authManager.getAllUsers().size() + " kont)");
+                tvSupabaseSyncStatus.setText("Supabase: Zsynchronizowano (" + authManager.getAllUsers().size() + " kont)");
                 renderList.run();
                 if (onUserUpdatedCallback != null) onUserUpdatedCallback.run();
             });
@@ -325,9 +392,9 @@ public class UserManagementDialog {
         btnBottomClose.setOnClickListener(v -> dialog.dismiss());
 
         // Initial sync from Supabase in background
-        tvSupabaseSyncStatus.setText("⚡ Supabase: Pobieranie...");
+        tvSupabaseSyncStatus.setText("Supabase: Pobieranie...");
         authManager.fetchAndSyncUsersFromSupabase(() -> {
-            tvSupabaseSyncStatus.setText("⚡ Supabase: Zsynchronizowano (" + authManager.getAllUsers().size() + " kont)");
+            tvSupabaseSyncStatus.setText("Supabase: Zsynchronizowano (" + authManager.getAllUsers().size() + " kont)");
             renderList.run();
         });
 

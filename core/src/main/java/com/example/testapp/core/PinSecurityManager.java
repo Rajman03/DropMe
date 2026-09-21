@@ -53,19 +53,35 @@ public class PinSecurityManager {
         prefs.edit().putString(KEY_ADMIN_PIN_HASH, hashed).apply();
     }
 
+    public static boolean hasPin(Context context, AuthUser user) {
+        if (user != null && user.getPin() != null && !user.getPin().trim().isEmpty()) {
+            return true;
+        }
+        if (user != null && user.isCreator() && context != null) {
+            return getCreatorPinHash(context) != null;
+        }
+        if (user != null && user.isAdmin() && context != null) {
+            return getAdminPinHash(context) != null;
+        }
+        if (context != null) {
+            return getAdminPinHash(context) != null || getCreatorPinHash(context) != null;
+        }
+        return false;
+    }
+
     public static boolean verifyUserPin(Context context, AuthUser user, String enteredPin) {
-        if (user == null || enteredPin == null) return false;
+        if (enteredPin == null) return false;
         String cleanPin = enteredPin.trim();
 
         // 1. Check account-specific PIN if set
-        if (user.getPin() != null && !user.getPin().trim().isEmpty()) {
+        if (user != null && user.getPin() != null && !user.getPin().trim().isEmpty()) {
             if (CredentialHasher.verify(cleanPin, user.getPin().trim())) {
                 return true;
             }
         }
 
         // 2. Creator checks (custom creator PIN hash)
-        if (user.isCreator() && context != null) {
+        if ((user == null || user.isCreator()) && context != null) {
             String creatorHash = getCreatorPinHash(context);
             if (creatorHash != null && CredentialHasher.verify(cleanPin, creatorHash)) {
                 return true;
@@ -73,7 +89,7 @@ public class PinSecurityManager {
         }
 
         // 3. Admin checks
-        if (user.isAdmin() && context != null) {
+        if ((user == null || user.isAdmin()) && context != null) {
             String adminHash = getAdminPinHash(context);
             if (adminHash != null && CredentialHasher.verify(cleanPin, adminHash)) {
                 return true;
@@ -115,6 +131,10 @@ public class PinSecurityManager {
                     Toast.makeText(context, "Wprowadź dokładnie 4 cyfry PIN-u", Toast.LENGTH_SHORT).show();
                     return;
                 }
+                if (CredentialHasher.isTrivialPin(entered)) {
+                    Toast.makeText(context, "PIN jest zbyt prosty (np. 1234, 0000). Wybierz trudniejszy kod.", Toast.LENGTH_LONG).show();
+                    return;
+                }
                 dialog.dismiss();
                 callback.onPinSet(entered);
             });
@@ -125,6 +145,72 @@ public class PinSecurityManager {
         }
 
         dialog.show();
+    }
+
+    public static void promptChangePinDialog(Activity activity, String title, String subtitle, OnPinSetListener callback) {
+        if (activity == null || callback == null) return;
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(activity);
+        View dialogView = LayoutInflater.from(activity).inflate(R.layout.dialog_change_pin, null);
+        builder.setView(dialogView);
+
+        AlertDialog dialog = builder.create();
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        }
+
+        TextView tvTitle = dialogView.findViewById(R.id.tvChangePinTitle);
+        TextView tvDesc = dialogView.findViewById(R.id.tvChangePinSubtitle);
+        EditText etNewPin = dialogView.findViewById(R.id.etNewPinInput);
+        EditText etConfirmPin = dialogView.findViewById(R.id.etConfirmPinInput);
+        Button btnSubmit = dialogView.findViewById(R.id.btnSaveNewPin);
+        Button btnCancel = dialogView.findViewById(R.id.btnCancelNewPin);
+
+        if (tvTitle != null && title != null) tvTitle.setText(title);
+        if (tvDesc != null && subtitle != null) tvDesc.setText(subtitle);
+
+        if (btnSubmit != null && etNewPin != null && etConfirmPin != null) {
+            btnSubmit.setOnClickListener(v -> {
+                String newPin = etNewPin.getText().toString().trim();
+                String confirmPin = etConfirmPin.getText().toString().trim();
+
+                if (newPin.length() != 4 || !newPin.matches("\\d{4}")) {
+                    Toast.makeText(activity, "Nowy PIN musi składać się z dokładnie 4 cyfr", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                if (!newPin.equals(confirmPin)) {
+                    Toast.makeText(activity, "Wprowadzone kody PIN nie są identyczne!", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                if (CredentialHasher.isTrivialPin(newPin)) {
+                    Toast.makeText(activity, "PIN jest zbyt prosty (np. 1234, 0000). Wybierz trudniejszy kod.", Toast.LENGTH_LONG).show();
+                    return;
+                }
+
+                dialog.dismiss();
+                callback.onPinSet(newPin);
+            });
+        }
+
+        if (btnCancel != null) {
+            btnCancel.setOnClickListener(v -> dialog.dismiss());
+        }
+
+        dialog.show();
+    }
+
+    public static void promptFullPinChangeFlow(Activity activity, AuthUser user, OnPinSetListener callback) {
+        if (activity == null || callback == null) return;
+
+        if (hasPin(activity, user)) {
+            promptAdminPin(activity, user, role -> {
+                promptChangePinDialog(activity, "Zmień kod PIN", "Wprowadź nowy 4-cyfrowy kod PIN", callback);
+            });
+        } else {
+            promptChangePinDialog(activity, "Ustaw kod PIN", "Utwórz nowy 4-cyfrowy kod PIN administratora", callback);
+        }
     }
 
     // Convenience method for unit tests

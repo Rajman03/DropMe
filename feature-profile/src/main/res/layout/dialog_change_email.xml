@@ -1,0 +1,185 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@drawable/card_bg"
+    android:padding="24dp">
+
+    <!-- Step 1: enter new e-mail address -->
+    <LinearLayout
+        android:id="@+id/groupChangeEmailStep1"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Zmiana adresu e-mail"
+            android:textSize="19sp"
+            android:textStyle="bold"
+            android:textColor="@color/text_primary"
+            android:layout_marginBottom="4dp" />
+
+        <TextView
+            android:id="@+id/tvChangeEmailCurrent"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Aktualny e-mail: —"
+            android:textSize="12sp"
+            android:textColor="@color/text_secondary"
+            android:layout_marginBottom="18dp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Nowy adres e-mail"
+            android:textSize="11sp"
+            android:textStyle="bold"
+            android:textColor="@color/text_secondary"
+            android:layout_marginBottom="4dp" />
+
+        <EditText
+            android:id="@+id/etNewEmail"
+            android:layout_width="match_parent"
+            android:layout_height="46dp"
+            android:hint="np. nazwa@domena.pl"
+            android:inputType="textEmailAddress"
+            android:textSize="14sp"
+            android:background="@drawable/search_bar_bg"
+            android:textColor="@color/text_primary"
+            android:textColorHint="@color/text_secondary"
+            android:paddingHorizontal="16dp"
+            android:layout_marginBottom="6dp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Dla bezpieczeństwa wyślemy 6-cyfrowy kod weryfikacyjny na TWÓJ AKTUALNY adres e-mail."
+            android:textSize="11sp"
+            android:textColor="@color/text_secondary"
+            android:lineSpacingMultiplier="1.2"
+            android:layout_marginBottom="10dp" />
+    </LinearLayout>
+
+    <!-- Step 2: enter code sent to the OLD e-mail -->
+    <LinearLayout
+        android:id="@+id/groupChangeEmailStep2"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:visibility="gone">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Potwierdź zmianę e-maila"
+            android:textSize="19sp"
+            android:textStyle="bold"
+            android:textColor="@color/text_primary"
+            android:gravity="center"
+            android:layout_marginBottom="4dp" />
+
+        <TextView
+            android:id="@+id/tvChangeEmailCodeInfo"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Wysłaliśmy 6-cyfrowy kod na adres: —"
+            android:textSize="12sp"
+            android:textColor="@color/text_secondary"
+            android:gravity="center"
+            android:layout_marginBottom="6dp" />
+
+        <!-- KROK 2a: kod ze STAREGO adresu (własność starego konta) -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Kod ze STAREGO adresu"
+            android:textSize="11sp"
+            android:textStyle="bold"
+            android:textColor="@color/text_secondary"
+            android:gravity="center"
+            android:layout_marginBottom="4dp" />
+
+        <EditText
+            android:id="@+id/etChangeEmailCode"
+            android:layout_width="match_parent"
+            android:layout_height="52dp"
+            android:hint="• • • • • •"
+            android:textColorHint="#94A3B8"
+            android:textColor="@color/text_primary"
+            android:textSize="22sp"
+            android:textStyle="bold"
+            android:letterSpacing="0.25"
+            android:gravity="center"
+            android:background="@drawable/code_input_bg"
+            android:inputType="number"
+            android:maxLength="6"
+            android:paddingHorizontal="16dp"
+            android:layout_marginBottom="12dp" />
+
+        <!-- KROK 2b: kod na NOWY adres (potwierdzenie własności nowej skrzynki) -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Kod z NOWEGO adresu"
+            android:textSize="11sp"
+            android:textStyle="bold"
+            android:textColor="@color/text_secondary"
+            android:gravity="center"
+            android:layout_marginBottom="4dp" />
+
+        <EditText
+            android:id="@+id/etChangeEmailCodeNew"
+            android:layout_width="match_parent"
+            android:layout_height="52dp"
+            android:hint="• • • • • •"
+            android:textColorHint="#94A3B8"
+            android:textColor="@color/text_primary"
+            android:textSize="22sp"
+            android:textStyle="bold"
+            android:letterSpacing="0.25"
+            android:gravity="center"
+            android:background="@drawable/code_input_bg"
+            android:inputType="number"
+            android:maxLength="6"
+            android:paddingHorizontal="16dp"
+            android:layout_marginBottom="8dp" />
+
+        <TextView
+            android:id="@+id/tvChangeEmailMessage"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:textColor="@color/expense_red"
+            android:gravity="center"
+            android:visibility="gone"
+            android:layout_marginBottom="6dp" />
+    </LinearLayout>
+
+    <!-- Action Buttons -->
+    <Button
+        android:id="@+id/btnSubmitChangeEmail"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:text="Wyślij kod weryfikacyjny"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        android:textColor="@color/white"
+        android:background="@drawable/btn_pill_dark"
+        android:layout_marginTop="10dp"
+        android:layout_marginBottom="8dp" />
+
+    <Button
+        android:id="@+id/btnCancelChangeEmail"
+        android:layout_width="match_parent"
+        android:layout_height="44dp"
+        android:text="Anuluj"
+        android:textSize="13sp"
+        android:textColor="@color/text_secondary"
+        android:background="@drawable/btn_pill_light" />
+
+</LinearLayout>

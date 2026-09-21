@@ -6,6 +6,7 @@ import org.json.JSONObject;
 public class AuthUser {
     private final String username;
     private String displayName;
+    private String email;
     private String password;
     private String rank;
     private String title;
@@ -16,6 +17,7 @@ public class AuthUser {
     public AuthUser(String username, String displayName, String password, String rank, String title, String avatar, boolean purchasedPremium, String pin) {
         this.username = username != null ? username.trim().toLowerCase() : "";
         this.displayName = displayName != null ? displayName.trim() : "";
+        this.email = "";
         this.password = password != null ? password : "";
         this.rank = rank != null ? rank : UserProfile.RANK_GUEST;
         this.title = title != null ? title : "Użytkownik";
@@ -126,10 +128,23 @@ public class AuthUser {
         return UserProfile.RANK_PREMIUM.equalsIgnoreCase(rank) || isPurchasedPremium() || isAdmin();
     }
 
+    public boolean isGuest() {
+        return "guest".equalsIgnoreCase(username) || UserProfile.RANK_GUEST.equalsIgnoreCase(rank);
+    }
+
+    public String getEmail() {
+        return email != null ? email : "";
+    }
+
+    public void setEmail(String email) {
+        this.email = email != null ? email.trim().toLowerCase() : "";
+    }
+
     public JSONObject toJsonObject() throws JSONException {
         JSONObject obj = new JSONObject();
         obj.put("username", username);
         obj.put("displayName", displayName);
+        obj.put("email", getEmail());
         obj.put("password", password);
         obj.put("rank", rank);
         obj.put("title", title);
@@ -140,7 +155,7 @@ public class AuthUser {
     }
 
     public static AuthUser fromJsonObject(JSONObject obj) throws JSONException {
-        return new AuthUser(
+        AuthUser user = new AuthUser(
                 obj.getString("username"),
                 obj.optString("displayName", "Użytkownik"),
                 obj.getString("password"),
@@ -150,5 +165,7 @@ public class AuthUser {
                 obj.optBoolean("purchasedPremium", false),
                 obj.optString("pin", "")
         );
+        user.setEmail(obj.optString("email", ""));
+        return user;
     }
 }

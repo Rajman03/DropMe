@@ -25,12 +25,12 @@ android {
     buildToolsVersion = "35.0.0"
 
     defaultConfig {
-        applicationId = "com.example.testapp"
+        applicationId = "com.dropme.app"
         minSdk = 24
         targetSdk = 36
         // Jedno źródło prawdy dla wersji (wcześniej dublowała się w AndroidManifest.xml).
-        versionCode = 21
-        versionName = "5.5"
+        versionCode = 22
+        versionName = "5.6"
     }
 
     signingConfigs {
@@ -65,6 +65,8 @@ android {
             isShrinkResources = true
             if (releaseStorePassword != null) {
                 signingConfig = signingConfigs.getByName("release")
+            } else {
+                signingConfig = signingConfigs.getByName("debug")
             }
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
@@ -95,4 +97,30 @@ dependencies {
     // Dlatego nie ma tu appcompat / material / constraintlayout ani core-ktx
     // (core-ktx wciągał dodatkowo kotlin-stdlib i kotlinx-coroutines do APK).
     testImplementation("junit:junit:4.13.2")
+}
+
+// Automatyczne kopiowanie świeżo skompilowanego APK do katalogu głównego projektu dla serwera WWW
+tasks.register("copyApkToRoot") {
+    description = "Kopiuje najświeższy plik APK do głównego katalogu projektu dla serwera WWW"
+    doLast {
+        val relSigned = layout.buildDirectory.file("outputs/apk/release/app-release.apk").get().asFile
+        val relUnsigned = layout.buildDirectory.file("outputs/apk/release/app-release-unsigned.apk").get().asFile
+        val releaseApk = if (relSigned.exists()) relSigned else if (relUnsigned.exists()) relUnsigned else null
+
+        if (releaseApk != null && releaseApk.exists()) {
+            val rootApk = rootProject.file("app-release.apk")
+            releaseApk.copyTo(rootApk, overwrite = true)
+            println("✓ [Auto-Copy] Zaktualizowano ${rootApk.name} w głównym katalogu (${releaseApk.length() / 1024} KB)")
+        }
+        val debugApk = layout.buildDirectory.file("outputs/apk/debug/app-debug.apk").get().asFile
+        if (debugApk.exists()) {
+            val rootDebugApk = rootProject.file("app-debug.apk")
+            debugApk.copyTo(rootDebugApk, overwrite = true)
+            println("✓ [Auto-Copy] Zaktualizowano ${rootDebugApk.name} w głównym katalogu (${debugApk.length() / 1024} KB)")
+        }
+    }
+}
+
+tasks.matching { it.name in listOf("assembleRelease", "assembleDebug", "assemble") }.configureEach {
+    finalizedBy("copyApkToRoot")
 }

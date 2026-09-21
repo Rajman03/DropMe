@@ -3,6 +3,7 @@ package com.example.testapp.data;
 import com.example.testapp.core.AuthUser;
 import com.example.testapp.core.PendingPurchase;
 import com.example.testapp.core.UserProfile;
+import com.example.testapp.core.UserQrItem;
 
 import android.content.Context;
 import android.os.Handler;
@@ -84,6 +85,9 @@ public class SupabaseClient {
                 body.put("avatar", user.getAvatar());
                 body.put("purchased_premium", user.isPurchasedPremium());
                 body.put("pin", user.getPin());
+                if (user.getEmail() != null && !user.getEmail().isEmpty()) {
+                    body.put("email", user.getEmail());
+                }
 
                 HttpURLConnection conn = openConnection(endpoint, "POST");
                 conn.setRequestProperty("Prefer", "resolution=merge-duplicates");
@@ -137,6 +141,9 @@ public class SupabaseClient {
                 body.put("avatar", user.getAvatar());
                 body.put("purchased_premium", user.isPurchasedPremium());
                 body.put("pin", user.getPin());
+                if (user.getEmail() != null && !user.getEmail().isEmpty()) {
+                    body.put("email", user.getEmail());
+                }
 
                 HttpURLConnection conn = openConnection(insertEndpoint, "POST");
                 conn.setRequestProperty("Prefer", "resolution=merge-duplicates,return=representation");
@@ -212,6 +219,7 @@ public class SupabaseClient {
                             parseBooleanField(obj, "purchased_premium", "purchasedPremium"),
                             pin
                     );
+                    user.setEmail(obj.optString("email", ""));
 
                     // Weryfikacja hasła
                     if (!user.verifyPassword(rawPassword)) {
@@ -260,6 +268,37 @@ public class SupabaseClient {
                     if (callback != null) {
                         if (success) callback.onSuccess(true);
                         else callback.onError("Update error code: " + code);
+                    }
+                });
+            } catch (Exception e) {
+                mainHandler.post(() -> {
+                    if (callback != null) callback.onError(e.getMessage());
+                });
+            }
+        });
+    }
+
+    public void updateUserEmail(String username, String newEmail, Callback<Boolean> callback) {
+        if (username == null || username.trim().isEmpty()) {
+            if (callback != null) callback.onError("Invalid username");
+            return;
+        }
+
+        executor.execute(() -> {
+            try {
+                String endpoint = config.getRestEndpoint(SupabaseConfig.TABLE_USERS) + "?username=eq." + username.trim().toLowerCase();
+                JSONObject body = new JSONObject();
+                body.put("email", newEmail != null ? newEmail.trim().toLowerCase() : "");
+
+                HttpURLConnection conn = openConnection(endpoint, "PATCH");
+                writeJson(conn, body.toString());
+
+                int code = conn.getResponseCode();
+                boolean success = (code >= 200 && code < 300);
+                mainHandler.post(() -> {
+                    if (callback != null) {
+                        if (success) callback.onSuccess(true);
+                        else callback.onError("Email update error code: " + code);
                     }
                 });
             } catch (Exception e) {
@@ -479,6 +518,7 @@ public class SupabaseClient {
                                 parseBooleanField(obj, "purchased_premium", "purchasedPremium"),
                                 obj.optString("pin", "")
                         );
+                        user.setEmail(obj.optString("email", ""));
                     }
                     final AuthUser finalUser = user;
                     mainHandler.post(() -> {
@@ -536,6 +576,7 @@ public class SupabaseClient {
                                 parseBooleanField(obj, "purchased_premium", "purchasedPremium"),
                                 obj.optString("pin", "")
                         );
+                        user.setEmail(obj.optString("email", ""));
                         list.add(user);
                     }
                     lastSyncSuccess = true;
@@ -565,6 +606,105 @@ public class SupabaseClient {
         });
     }
 
+    public void saveQrCode(String username, UserQrItem item, Callback<Boolean> callback) {
+        if (username == null || username.trim().isEmpty() || item == null) return;
+        executor.execute(() -> {
+            try {
+                String endpoint = config.getRestEndpoint(SupabaseConfig.TABLE_QR_CODES) + "?on_conflict=id";
+                JSONObject body = new JSONObject();
+                body.put("id", item.getId());
+                body.put("username", username.trim().toLowerCase());
+                body.put("name", item.getName());
+                body.put("icon", item.getIcon());
+                body.put("url", item.getUrl());
+                body.put("date", item.getDate());
+                body.put("favorite", item.isFavorite());
+                body.put("qr_color", item.getQrColor());
+
+                HttpURLConnection conn = openConnection(endpoint, "POST");
+                conn.setRequestProperty("Prefer", "resolution=merge-duplicates");
+                writeJson(conn, body.toString());
+
+                int code = conn.getResponseCode();
+                boolean success = (code >= 200 && code < 300);
+                mainHandler.post(() -> {
+                    if (callback != null) {
+                        if (success) callback.onSuccess(true);
+                        else callback.onError("Error saving QR: " + code);
+                    }
+                });
+            } catch (Exception e) {
+                mainHandler.post(() -> {
+                    if (callback != null) callback.onError(e.getMessage());
+                });
+            }
+        });
+    }
+
+    public void deleteQrCode(long qrId, Callback<Boolean> callback) {
+        executor.execute(() -> {
+            try {
+                String endpoint = config.getRestEndpoint(SupabaseConfig.TABLE_QR_CODES) + "?id=eq." + qrId;
+                HttpURLConnection conn = openConnection(endpoint, "DELETE");
+                int code = conn.getResponseCode();
+                boolean success = (code >= 200 && code < 300);
+                mainHandler.post(() -> {
+                    if (callback != null) {
+                        if (success) callback.onSuccess(true);
+                        else callback.onError("Error deleting QR: " + code);
+                    }
+                });
+            } catch (Exception e) {
+                mainHandler.post(() -> {
+                    if (callback != null) callback.onError(e.getMessage());
+                });
+            }
+        });
+    }
+
+    public void fetchQrCodes(String username, Callback<List<UserQrItem>> callback) {
+        if (username == null || username.trim().isEmpty()) {
+            if (callback != null) callback.onSuccess(new ArrayList<>());
+            return;
+        }
+
+        executor.execute(() -> {
+            try {
+                String endpoint = config.getRestEndpoint(SupabaseConfig.TABLE_QR_CODES) + "?username=eq." + username.trim().toLowerCase() + "&select=*&order=id.desc";
+                HttpURLConnection conn = openConnection(endpoint, "GET");
+
+                int code = conn.getResponseCode();
+                if (code >= 200 && code < 300) {
+                    String response = readStream(conn.getInputStream());
+                    JSONArray arr = new JSONArray(response);
+                    List<UserQrItem> list = new ArrayList<>();
+                    for (int i = 0; i < arr.length(); i++) {
+                        JSONObject obj = arr.getJSONObject(i);
+                        long id = obj.optLong("id", System.currentTimeMillis());
+                        String name = obj.optString("name", "Kod QR");
+                        String icon = obj.optString("icon", "🔗");
+                        String url = obj.optString("url", "");
+                        String date = obj.optString("date", "Dzisiaj");
+                        boolean fav = parseBooleanField(obj, "favorite");
+                        String qrColor = obj.optString("qr_color", "");
+                        list.add(new UserQrItem(id, name, icon, url, date, fav, qrColor));
+                    }
+                    mainHandler.post(() -> {
+                        if (callback != null) callback.onSuccess(list);
+                    });
+                } else {
+                    mainHandler.post(() -> {
+                        if (callback != null) callback.onError("Fetch QR code error: " + code);
+                    });
+                }
+            } catch (Exception e) {
+                mainHandler.post(() -> {
+                    if (callback != null) callback.onError(e.getMessage());
+                });
+            }
+        });
+    }
+
     private void setRequestMethodSafe(HttpURLConnection conn, String method) throws Exception {
         try {
             conn.setRequestMethod(method);
@@ -581,6 +721,151 @@ public class SupabaseClient {
                 throw e;
             }
         }
+    }
+
+    // ------------------------------------------------------------------
+    // Kody weryfikacyjne przez Supabase Auth (e-mail OTP)
+    // Kod generuje, wysyła e-mailem i weryfikuje serwer Supabase -
+    // aplikacja nigdy nie widzi prawidłowego kodu.
+    // ------------------------------------------------------------------
+
+    public static final String ERR_INVALID_OTP = "Nieprawidłowy lub wygasły kod";
+
+    /**
+     * Wysyła 6-cyfrowy kod na podany adres e-mail (Supabase Auth: POST /auth/v1/otp).
+     * create_user=true, bo konta aplikacji żyją w tabeli profiles, a nie w auth.users.
+     */
+    public void sendEmailOtp(String email, Callback<Boolean> callback) {
+        executor.execute(() -> {
+            try {
+                String cleanEmail = email != null ? email.trim().toLowerCase() : "";
+                JSONObject body = new JSONObject();
+                body.put("email", cleanEmail);
+                body.put("create_user", true);
+
+                HttpURLConnection conn = openAuthConnection("otp");
+                writeJson(conn, body.toString());
+
+                int respCode = conn.getResponseCode();
+                boolean success = (respCode >= 200 && respCode < 300);
+                String errDetails = "";
+                if (!success) {
+                    try {
+                        errDetails = readStream(conn.getErrorStream());
+                    } catch (Exception ignored) {}
+                }
+                final String err = success ? null : parseAuthError(respCode, errDetails);
+                mainHandler.post(() -> {
+                    if (callback == null) return;
+                    if (success) callback.onSuccess(true);
+                    else callback.onError(err);
+                });
+            } catch (Exception e) {
+                final String msg = networkErrorMessage(e);
+                mainHandler.post(() -> {
+                    if (callback != null) callback.onError(msg);
+                });
+            }
+        });
+    }
+
+    /**
+     * Sprawdza kod wpisany przez użytkownika (Supabase Auth: POST /auth/v1/verify).
+     * Błędny/wygasły kod kończy się błędem ERR_INVALID_OTP.
+     */
+    public void verifyEmailOtp(String email, String token, Callback<Boolean> callback) {
+        executor.execute(() -> {
+            try {
+                String cleanEmail = email != null ? email.trim().toLowerCase() : "";
+                JSONObject body = new JSONObject();
+                body.put("type", "email");
+                body.put("email", cleanEmail);
+                body.put("token", token != null ? token.trim() : "");
+
+                HttpURLConnection conn = openAuthConnection("verify");
+                writeJson(conn, body.toString());
+
+                int respCode = conn.getResponseCode();
+                boolean success = (respCode >= 200 && respCode < 300);
+                String errDetails = "";
+                if (!success) {
+                    try {
+                        errDetails = readStream(conn.getErrorStream());
+                    } catch (Exception ignored) {}
+                }
+                final String err = success ? null : parseAuthError(respCode, errDetails);
+                mainHandler.post(() -> {
+                    if (callback == null) return;
+                    if (success) callback.onSuccess(true);
+                    else callback.onError(err);
+                });
+            } catch (Exception e) {
+                final String msg = networkErrorMessage(e);
+                mainHandler.post(() -> {
+                    if (callback != null) callback.onError(msg);
+                });
+            }
+        });
+    }
+
+    private static String networkErrorMessage(Exception e) {
+        String m = e.getMessage();
+        return "Brak połączenia z Supabase" + (m != null && !m.isEmpty() ? " (" + m + ")" : "");
+    }
+
+    /** Tłumaczy odpowiedź błędu Supabase Auth na czytelny komunikat. */
+    static String parseAuthError(int httpCode, String raw) {
+        String errorCode = "";
+        String msg = "";
+        try {
+            JSONObject o = new JSONObject(raw != null && !raw.isEmpty() ? raw : "{}");
+            errorCode = o.optString("error_code", "");
+            msg = o.optString("msg", o.optString("message", o.optString("error_description", "")));
+        } catch (Exception ignored) {}
+
+        switch (errorCode) {
+            case "otp_expired":
+            case "invalid_credentials":
+                return ERR_INVALID_OTP;
+            case "over_email_send_rate_limit":
+            case "over_request_rate_limit":
+                return "Za dużo wysłanych wiadomości. Odczekaj minutę i spróbuj ponownie.";
+            case "email_address_invalid":
+                return "Supabase odrzucił ten adres e-mail jako nieprawidłowy.";
+            case "email_address_not_authorized":
+                return "Domyślny serwer poczty Supabase wysyła tylko do członków zespołu projektu. "
+                        + "Skonfiguruj własny SMTP w Supabase: Authentication → Emails → SMTP Settings.";
+            case "signup_disabled":
+            case "otp_disabled":
+            case "email_provider_disabled":
+                return "Logowanie e-mailem jest wyłączone w Supabase (Authentication → Providers → Email).";
+            default:
+                break;
+        }
+        if (httpCode == 429) {
+            return "Za dużo wysłanych wiadomości. Odczekaj minutę i spróbuj ponownie.";
+        }
+        if (httpCode == 400 || httpCode == 401 || httpCode == 403 || httpCode == 422) {
+            if (msg.toLowerCase().contains("expired") || msg.toLowerCase().contains("invalid")) {
+                return ERR_INVALID_OTP;
+            }
+        }
+        if (msg.toLowerCase().contains("sending") && msg.toLowerCase().contains("email")) {
+            return "Supabase nie mógł wysłać e-maila. Sprawdź ustawienia SMTP (Authentication → Emails → SMTP Settings).";
+        }
+        return "Błąd Supabase Auth (" + httpCode + ")" + (msg.isEmpty() ? "" : ": " + msg);
+    }
+
+    private HttpURLConnection openAuthConnection(String path) throws Exception {
+        URL url = new URL(config.getAuthEndpoint(path));
+        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        setRequestMethodSafe(conn, "POST");
+        // Auth API wymaga tylko nagłówka apikey (klucz publishable nie jest JWT-em)
+        conn.setRequestProperty("apikey", config.getAnonKey());
+        conn.setRequestProperty("Content-Type", "application/json");
+        conn.setConnectTimeout(10000);
+        conn.setReadTimeout(15000);
+        return conn;
     }
 
     private HttpURLConnection openConnection(String endpoint, String method) throws Exception {

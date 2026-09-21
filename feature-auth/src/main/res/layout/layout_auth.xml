@@ -100,39 +100,9 @@
                     android:textColor="@color/text_secondary" />
             </LinearLayout>
 
-            <!-- Name field (only visible in Register mode) -->
-            <LinearLayout
-                android:id="@+id/groupAuthName"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:visibility="gone"
-                android:layout_marginBottom="12dp">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Imię i nazwisko"
-                    android:textSize="12sp"
-                    android:textStyle="bold"
-                    android:textColor="@color/text_secondary"
-                    android:layout_marginBottom="6dp" />
-
-                <EditText
-                    android:id="@+id/etAuthName"
-                    android:layout_width="match_parent"
-                    android:layout_height="48dp"
-                    android:hint="np. Jan Kowalski"
-                    android:inputType="textCapWords"
-                    android:background="@drawable/search_bar_bg"
-                    android:paddingHorizontal="14dp"
-                    android:textColor="@color/text_primary"
-                    android:textColorHint="@color/text_secondary"
-                    android:textSize="14sp" />
-            </LinearLayout>
-
-            <!-- Login / Email field -->
+            <!-- Login / Username field -->
             <TextView
+                android:id="@+id/tvAuthLoginLabel"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Login"
@@ -145,7 +115,7 @@
                 android:id="@+id/etAuthLogin"
                 android:layout_width="match_parent"
                 android:layout_height="48dp"
-                android:hint="Wpisz login (np. creator)"
+                android:hint="Wpisz login lub e-mail"
                 android:inputType="text"
                 android:background="@drawable/search_bar_bg"
                 android:paddingHorizontal="14dp"
@@ -153,6 +123,37 @@
                 android:textColorHint="@color/text_secondary"
                 android:textSize="14sp"
                 android:layout_marginBottom="12dp" />
+
+            <!-- Email field (only visible in Register mode) -->
+            <LinearLayout
+                android:id="@+id/groupAuthEmail"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="gone"
+                android:layout_marginBottom="12dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Adres e-mail"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/text_secondary"
+                    android:layout_marginBottom="6dp" />
+
+                <EditText
+                    android:id="@+id/etAuthEmail"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:hint="np. twoj@email.com"
+                    android:inputType="textEmailAddress"
+                    android:background="@drawable/search_bar_bg"
+                    android:paddingHorizontal="14dp"
+                    android:textColor="@color/text_primary"
+                    android:textColorHint="@color/text_secondary"
+                    android:textSize="14sp" />
+            </LinearLayout>
 
             <!-- Password field -->
             <TextView
@@ -175,7 +176,21 @@
                 android:textColor="@color/text_primary"
                 android:textColorHint="@color/text_secondary"
                 android:textSize="14sp"
-                android:layout_marginBottom="16dp" />
+                android:layout_marginBottom="6dp" />
+
+            <!-- Forgot Password Link (Login mode only) -->
+            <TextView
+                android:id="@+id/tvAuthForgotPassword"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="end"
+                android:text="Nie pamiętasz hasła?"
+                android:textColor="@color/primary"
+                android:textSize="12sp"
+                android:layout_marginBottom="14dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:padding="4dp" />
 
             <!-- Submit Button -->
             <Button

@@ -175,18 +175,23 @@ public class MultiLinkProfile {
      * Creates or publishes an online micro-card via open web API so any phone browser can open it.
      */
     public void publishWebCard(Context context, WebCardCallback callback) {
-        final String accessToken = BuildConfig.TELEGRAPH_TOKEN;
-        if (accessToken == null || accessToken.trim().isEmpty()) {
-            // Brak tokenu (nie ma go w local.properties ani w zmiennych srodowiskowych).
-            // Nie blokujemy reszty aplikacji - tylko ta jedna funkcja jest wylaczona.
-            if (callback != null) {
-                callback.onError("Publikacja karty online jest wylaczona (brak tokenu DROPME_TELEGRAPH_TOKEN)");
-            }
-            return;
-        }
-
         executor.execute(() -> {
             try {
+                String accessToken = BuildConfig.TELEGRAPH_TOKEN;
+                if (accessToken == null || accessToken.trim().isEmpty()) {
+                    SharedPreferences sp = context.getSharedPreferences("dropme_telegraph", Context.MODE_PRIVATE);
+                    accessToken = sp.getString("cached_telegraph_token", null);
+                }
+                if (accessToken == null || accessToken.trim().isEmpty()) {
+                    accessToken = fetchDynamicTelegraphToken(context);
+                }
+                if (accessToken == null || accessToken.trim().isEmpty()) {
+                    if (callback != null) {
+                        callback.onError("Nie udało się połączyć z usługą publikacji karty");
+                    }
+                    return;
+                }
+
                 // Prepare rich Telegraph article JSON
                 JSONObject payload = new JSONObject();
                 payload.put("access_token", accessToken.trim());
@@ -198,24 +203,30 @@ public class MultiLinkProfile {
 
                 JSONArray content = new JSONArray();
 
-                // 1. Avatar figure at the top
+                // 1. Sleek Modern Panoramic Header Banner
                 try {
-                    String seed = java.net.URLEncoder.encode(displayName, "UTF-8");
-                    String avatarUrl = "https://api.dicebear.com/7.x/initials/png?seed=" + seed + "&backgroundColor=0f172a&textColor=ffffff&size=240";
                     JSONObject fig = new JSONObject();
                     fig.put("tag", "figure");
                     JSONArray figChildren = new JSONArray();
                     JSONObject img = new JSONObject();
                     img.put("tag", "img");
                     JSONObject imgAttrs = new JSONObject();
-                    imgAttrs.put("src", avatarUrl);
+                    imgAttrs.put("src", "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=1000&h=360&fit=crop&q=80");
                     img.put("attrs", imgAttrs);
                     figChildren.put(img);
+
+                    JSONObject figCap = new JSONObject();
+                    figCap.put("tag", "figcaption");
+                    JSONArray capText = new JSONArray();
+                    capText.put("✨ DropMe • Zweryfikowana Wizytówka Cyfrowa");
+                    figCap.put("children", capText);
+                    figChildren.put(figCap);
+
                     fig.put("children", figChildren);
                     content.put(fig);
                 } catch (Exception ignored) {}
 
-                // 2. Greeting
+                // 2. Greeting & Subtitle
                 JSONObject h3 = new JSONObject();
                 h3.put("tag", "h3");
                 JSONArray h3Children = new JSONArray();
@@ -223,20 +234,30 @@ public class MultiLinkProfile {
                 h3.put("children", h3Children);
                 content.put(h3);
 
-                // 3. Bio / description in stylized blockquote
-                JSONObject quoteBio = new JSONObject();
-                quoteBio.put("tag", "blockquote");
-                JSONArray quoteChildren = new JSONArray();
-                JSONObject boldBio = new JSONObject();
-                boldBio.put("tag", "b");
-                JSONArray boldBioChildren = new JSONArray();
-                boldBioChildren.put((bio != null && !bio.trim().isEmpty()) ? bio.trim() : "Moja oficjalna wizytówka kontaktowa");
-                boldBio.put("children", boldBioChildren);
-                quoteChildren.put(boldBio);
-                quoteChildren.put(new JSONObject().put("tag", "br"));
-                quoteChildren.put("✨ Oficjalna lista profili społecznościowych i linków kontaktowych:");
-                quoteBio.put("children", quoteChildren);
-                content.put(quoteBio);
+                JSONObject subP = new JSONObject();
+                subP.put("tag", "p");
+                JSONArray subChildren = new JSONArray();
+                JSONObject subI = new JSONObject();
+                subI.put("tag", "i");
+                subI.put("children", new JSONArray().put("🌟 Oficjalny profil kontaktowy • Dotknij wybranego linku, aby otworzyć:"));
+                subChildren.put(subI);
+                subP.put("children", subChildren);
+                content.put(subP);
+
+                // 3. Bio / description in stylized card
+                if (bio != null && !bio.trim().isEmpty()) {
+                    JSONObject quoteBio = new JSONObject();
+                    quoteBio.put("tag", "blockquote");
+                    JSONArray quoteChildren = new JSONArray();
+                    JSONObject boldBio = new JSONObject();
+                    boldBio.put("tag", "b");
+                    boldBio.put("children", new JSONArray().put("📌 O mnie:"));
+                    quoteChildren.put(boldBio);
+                    quoteChildren.put(new JSONObject().put("tag", "br"));
+                    quoteChildren.put(bio.trim());
+                    quoteBio.put("children", quoteChildren);
+                    content.put(quoteBio);
+                }
 
                 // 4. Divider
                 content.put(new JSONObject().put("tag", "hr"));
@@ -245,21 +266,21 @@ public class MultiLinkProfile {
                 JSONObject h4 = new JSONObject();
                 h4.put("tag", "h4");
                 JSONArray h4Children = new JSONArray();
-                h4Children.put("🔗 Profile i Social Media:");
+                h4Children.put("🚀 Profile Społecznościowe & Kontakt:");
                 h4.put("children", h4Children);
                 content.put(h4);
 
                 // 6. Styled platform cards
-                addLinkCard(content, "🎵 TIKTOK", cleanHandle(tiktok), SocialPlatform.TIKTOK.buildUrl(tiktok), "Otwórz profil na TikTok");
-                addLinkCard(content, "📸 INSTAGRAM", cleanHandle(instagram), SocialPlatform.INSTAGRAM.buildUrl(instagram), "Otwórz profil na Instagramie");
-                addLinkCard(content, "👻 SNAPCHAT", cleanHandle(snapchat), SocialPlatform.SNAPCHAT.buildUrl(snapchat), "Dodaj profil na Snapchacie");
-                addLinkCard(content, "💬 DISCORD", discord != null ? discord.trim() : "", SocialPlatform.DISCORD.buildUrl(discord), "Dołącz na Discord");
-                addLinkCard(content, "🌐 X (TWITTER)", cleanHandle(twitter), SocialPlatform.TWITTER.buildUrl(twitter), "Odwiedź profil na X");
-                addLinkCard(content, "💼 LINKEDIN", linkedin != null ? linkedin.trim() : "", SocialPlatform.LINKEDIN.buildUrl(linkedin), "Zobacz profil LinkedIn");
-                addLinkCard(content, "🌍 STRONA WWW", website != null ? website.trim() : "", SocialPlatform.CUSTOM.buildUrl(website), "Przejdź na stronę WWW");
+                addLinkCard(content, "🎵 TikTok", cleanHandle(tiktok), SocialPlatform.TIKTOK.buildUrl(tiktok), "Otwórz profil na TikTok");
+                addLinkCard(content, "📸 Instagram", cleanHandle(instagram), SocialPlatform.INSTAGRAM.buildUrl(instagram), "Otwórz profil na Instagramie");
+                addLinkCard(content, "👻 Snapchat", cleanHandle(snapchat), SocialPlatform.SNAPCHAT.buildUrl(snapchat), "Dodaj profil na Snapchacie");
+                addLinkCard(content, "💬 Discord", discord != null ? discord.trim() : "", SocialPlatform.DISCORD.buildUrl(discord), "Dołącz na Discord");
+                addLinkCard(content, "🌐 X (Twitter)", cleanHandle(twitter), SocialPlatform.TWITTER.buildUrl(twitter), "Odwiedź profil na X");
+                addLinkCard(content, "💼 LinkedIn", linkedin != null ? linkedin.trim() : "", SocialPlatform.LINKEDIN.buildUrl(linkedin), "Zobacz profil LinkedIn");
+                addLinkCard(content, "🌍 Strona WWW", website != null ? website.trim() : "", SocialPlatform.CUSTOM.buildUrl(website), "Przejdź na stronę WWW");
 
                 if (phone != null && !phone.trim().isEmpty()) {
-                    addLinkCard(content, "📞 TELEFON", phone.trim(), "tel:" + phone.trim().replaceAll("\\s+", ""), "Zadzwoń bezpośrednio");
+                    addLinkCard(content, "📞 Telefon", phone.trim(), "tel:" + phone.trim().replaceAll("\\s+", ""), "Zadzwoń bezpośrednio");
                 }
 
                 // 7. Footer
@@ -267,11 +288,14 @@ public class MultiLinkProfile {
                 JSONObject footerP = new JSONObject();
                 footerP.put("tag", "p");
                 JSONArray footerChildren = new JSONArray();
+                JSONObject footerB = new JSONObject();
+                footerB.put("tag", "b");
+                footerB.put("children", new JSONArray().put("📱 Stworzono za pomocą DropMe"));
+                footerChildren.put(footerB);
+                footerChildren.put(new JSONObject().put("tag", "br"));
                 JSONObject footerI = new JSONObject();
                 footerI.put("tag", "i");
-                JSONArray fiText = new JSONArray();
-                fiText.put("📱 Wygenerowano za pomocą aplikacji DropMe • Wszystkie Twoje linki w 1 kodzie");
-                footerI.put("children", fiText);
+                footerI.put("children", new JSONArray().put("Wszystkie linki, profile i kontakty zebrane w jednym interaktywnym kodzie QR."));
                 footerChildren.put(footerI);
                 footerP.put("children", footerChildren);
                 content.put(footerP);
@@ -361,6 +385,38 @@ public class MultiLinkProfile {
         if (s == null) return "";
         String t = s.trim();
         return t.startsWith("@") ? t.substring(1) : t;
+    }
+
+    private String fetchDynamicTelegraphToken(Context context) {
+        try {
+            URL url = new URL("https://api.telegra.ph/createAccount?short_name=DropMe&author_name=DropMe");
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("GET");
+            conn.setConnectTimeout(6000);
+            conn.setReadTimeout(6000);
+            if (conn.getResponseCode() == 200) {
+                InputStream in = conn.getInputStream();
+                byte[] buf = new byte[2048];
+                int len;
+                StringBuilder sb = new StringBuilder();
+                while ((len = in.read(buf)) != -1) {
+                    sb.append(new String(buf, 0, len, "UTF-8"));
+                }
+                in.close();
+                JSONObject res = new JSONObject(sb.toString());
+                if (res.optBoolean("ok", false)) {
+                    String token = res.getJSONObject("result").getString("access_token");
+                    if (token != null && !token.trim().isEmpty()) {
+                        context.getSharedPreferences("dropme_telegraph", Context.MODE_PRIVATE)
+                                .edit()
+                                .putString("cached_telegraph_token", token.trim())
+                                .apply();
+                        return token.trim();
+                    }
+                }
+            }
+        } catch (Exception ignored) {}
+        return null;
     }
 
     // Getters and setters

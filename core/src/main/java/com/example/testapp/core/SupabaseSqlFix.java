@@ -12,32 +12,50 @@ public final class SupabaseSqlFix {
         // klasa narzędziowa - bez instancji
     }
 
-    public static final String SQL = """
-            -- DROPME - NAPRAWA TABELI SUPABASE
-            DROP TABLE IF EXISTS public.profiles CASCADE;
-            CREATE TABLE public.profiles (
-                username TEXT PRIMARY KEY,
-                password TEXT DEFAULT '',
-                display_name TEXT NOT NULL DEFAULT 'Użytkownik',
-                rank TEXT NOT NULL DEFAULT 'Guest',
-                title TEXT NOT NULL DEFAULT 'Profil wizytówki DropMe',
-                avatar TEXT NOT NULL DEFAULT '👤',
-                purchased_premium BOOLEAN NOT NULL DEFAULT false,
-                pin TEXT DEFAULT '',
-                created_at TIMESTAMPTZ NOT NULL DEFAULT now()
-            );
-            ALTER TABLE public.profiles DISABLE ROW LEVEL SECURITY;
-            GRANT ALL ON public.profiles TO anon, authenticated, service_role;
-            CREATE TABLE IF NOT EXISTS public.app_purchases (
-                id BIGSERIAL PRIMARY KEY,
-                username TEXT NOT NULL,
-                plan TEXT NOT NULL,
-                amount NUMERIC DEFAULT 0,
-                timestamp BIGINT,
-                created_at TIMESTAMPTZ DEFAULT now()
-            );
-            ALTER TABLE public.app_purchases DISABLE ROW LEVEL SECURITY;
-            GRANT ALL ON public.app_purchases TO anon, authenticated, service_role;
-            NOTIFY pgrst, 'reload schema';
-            """;
+    public static final String SQL =
+            "DROP TABLE IF EXISTS public.profiles CASCADE;\n"
+          + "CREATE TABLE public.profiles (\n"
+          + "    username TEXT PRIMARY KEY,\n"
+          + "    email TEXT DEFAULT '',\n"
+          + "    password TEXT DEFAULT '',\n"
+          + "    display_name TEXT NOT NULL DEFAULT 'User',\n"
+          + "    rank TEXT NOT NULL DEFAULT 'Guest',\n"
+          + "    title TEXT NOT NULL DEFAULT 'DropMe Profile',\n"
+          + "    avatar TEXT NOT NULL DEFAULT '',\n"
+          + "    purchased_premium BOOLEAN NOT NULL DEFAULT false,\n"
+          + "    pin TEXT DEFAULT '',\n"
+          + "    created_at TIMESTAMPTZ NOT NULL DEFAULT now()\n"
+          + ");\n"
+          + "ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;\n"
+          + "CREATE POLICY \"Allow all for profiles\" ON public.profiles FOR ALL USING (true) WITH CHECK (true);\n"
+          + "GRANT ALL ON public.profiles TO anon, authenticated, service_role;\n"
+          + "DROP TABLE IF EXISTS public.app_purchases CASCADE;\n"
+          + "CREATE TABLE public.app_purchases (\n"
+          + "    id BIGSERIAL PRIMARY KEY,\n"
+          + "    username TEXT NOT NULL,\n"
+          + "    plan TEXT NOT NULL,\n"
+          + "    amount NUMERIC DEFAULT 0,\n"
+          + "    timestamp BIGINT,\n"
+          + "    created_at TIMESTAMPTZ DEFAULT now()\n"
+          + ");\n"
+          + "ALTER TABLE public.app_purchases ENABLE ROW LEVEL SECURITY;\n"
+          + "CREATE POLICY \"Allow all for app_purchases\" ON public.app_purchases FOR ALL USING (true) WITH CHECK (true);\n"
+          + "GRANT ALL ON public.app_purchases TO anon, authenticated, service_role;\n"
+          + "DROP TABLE IF EXISTS public.user_qr_codes CASCADE;\n"
+          + "CREATE TABLE public.user_qr_codes (\n"
+          + "    id BIGINT PRIMARY KEY,\n"
+          + "    username TEXT NOT NULL,\n"
+          + "    name TEXT NOT NULL,\n"
+          + "    icon TEXT DEFAULT '',\n"
+          + "    url TEXT NOT NULL,\n"
+          + "    date TEXT DEFAULT '',\n"
+          + "    favorite BOOLEAN DEFAULT false,\n"
+          + "    qr_color TEXT DEFAULT '',\n"
+          + "    created_at TIMESTAMPTZ DEFAULT now()\n"
+          + ");\n"
+          + "ALTER TABLE public.user_qr_codes ENABLE ROW LEVEL SECURITY;\n"
+          + "CREATE POLICY \"Allow all for user_qr_codes\" ON public.user_qr_codes FOR ALL USING (true) WITH CHECK (true);\n"
+          + "GRANT ALL ON public.user_qr_codes TO anon, authenticated, service_role;\n"
+          + "DROP TABLE IF EXISTS public.verification_codes CASCADE;\n"
+          + "NOTIFY pgrst, 'reload schema';\n";
 }

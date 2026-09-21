@@ -1,7 +1,11 @@
 package com.example.testapp.feature.dashboard;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.Intent;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -34,6 +38,12 @@ public class DashboardController {
         /** Nowy kod QR został utworzony - np. pokaż szczegóły. */
         void onQrCreated(UserQrItem item);
 
+        /** Kod QR został usunięty. */
+        default void onQrDeleted(UserQrItem item) {}
+
+        /** Kod QR został zaktualizowany (np. ulubiony). */
+        default void onQrUpdated(UserQrItem item) {}
+
         /** Zmieniły się dane, odśwież cały interfejs. */
         void refreshAll();
     }
@@ -45,24 +55,14 @@ public class DashboardController {
     private final Host host;
 
     private final DashboardFilterController filterController;
-    private final PlatformSelectorController platformSelector;
 
     private View btnAddQrForm;
-    private View formAddQr;
+    private View btnEmptyAddQr;
 
     private LinearLayout userQrContainer;
     private View tvEmptyQrList;
     private TextView tvQrCounterBadge;
     private LinearLayout bannerLimitReached;
-    private EditText etNewQrName;
-    private EditText etNewQrUrl;
-
-    private String selectedQrColor = "#0F172A";
-    private View btnColorObsidian;
-    private View btnColorBlue;
-    private View btnColorGold;
-    private View btnColorEmerald;
-    private View btnColorViolet;
 
     public DashboardController(Activity activity,
                                UserQrManager userQrManager,
@@ -76,95 +76,122 @@ public class DashboardController {
         this.host = host;
 
         bindViews();
-        setupAddQrFormToggle();
-        setupColorPicker();
+        setupAddQrActions();
 
         this.filterController = new DashboardFilterController(activity, this::refreshViews);
-        this.platformSelector = new PlatformSelectorController(activity);
-        this.platformSelector.attachAutoDetection(etNewQrUrl, etNewQrName, userProfile);
 
         setupMultiLinkActions();
         setupScannerActions();
-        setupCreateQrAction();
     }
 
     private void bindViews() {
         btnAddQrForm = activity.findViewById(R.id.fabAddQr);
-        formAddQr = activity.findViewById(R.id.formAddQr);
+        btnEmptyAddQr = activity.findViewById(R.id.btnEmptyAddQr);
 
         userQrContainer = activity.findViewById(R.id.userQrContainer);
         tvEmptyQrList = activity.findViewById(R.id.tvEmptyQrList);
         tvQrCounterBadge = activity.findViewById(R.id.tvQrCounterBadge);
         bannerLimitReached = activity.findViewById(R.id.bannerLimitReached);
-
-        etNewQrName = activity.findViewById(R.id.etNewQrName);
-        etNewQrUrl = activity.findViewById(R.id.etNewQrUrl);
-
-        btnColorObsidian = activity.findViewById(R.id.btnColorObsidian);
-        btnColorBlue = activity.findViewById(R.id.btnColorBlue);
-        btnColorGold = activity.findViewById(R.id.btnColorGold);
-        btnColorEmerald = activity.findViewById(R.id.btnColorEmerald);
-        btnColorViolet = activity.findViewById(R.id.btnColorViolet);
     }
 
-    // ===================== FORMULARZ: POKAŻ / UKRYJ =====================
+    // ===================== FORMULARZ W MODALU (DIALOG) =====================
 
-    /**
-     * Niebieski przycisk "+" rozwija (i zwija) formularz tworzenia nowego kodu QR.
-     * Formularz jest domyślnie schowany - widać tylko przycisk.
-     */
-    private void setupAddQrFormToggle() {
-        if (btnAddQrForm == null || formAddQr == null) return;
-
-        btnAddQrForm.setOnClickListener(v ->
-                setFormVisible(formAddQr.getVisibility() != View.VISIBLE));
-
-        setFormVisible(false);
-    }
-
-    /** Pokazuje lub ukrywa formularz tworzenia kodu QR. */
-    public void setFormVisible(boolean visible) {
-        if (formAddQr == null) return;
-        formAddQr.setVisibility(visible ? View.VISIBLE : View.GONE);
-        if (visible) scrollToForm();
-    }
-
-    /** Przewija dashboard tak, aby rozwinięty formularz był widoczny. */
-    private void scrollToForm() {
-        View dashboard = activity.findViewById(R.id.layoutDashboard);
-        if (dashboard instanceof ScrollView) {
-            ScrollView scrollView = (ScrollView) dashboard;
-            scrollView.post(() -> scrollView.fullScroll(View.FOCUS_DOWN));
+    private void setupAddQrActions() {
+        if (btnAddQrForm != null) {
+            btnAddQrForm.setOnClickListener(v -> showAddQrDialog());
+        }
+        if (btnEmptyAddQr != null) {
+            btnEmptyAddQr.setOnClickListener(v -> showAddQrDialog());
         }
     }
 
-    // ===================== WYBÓR KOLORU KODU QR =====================
-
-    private void setupColorPicker() {
-        if (btnColorObsidian != null) btnColorObsidian.setOnClickListener(v -> selectQrColor("#0F172A"));
-        if (btnColorBlue != null) btnColorBlue.setOnClickListener(v -> selectQrColor("#2563EB"));
-        if (btnColorGold != null) btnColorGold.setOnClickListener(v -> selectQrColor("#D97706"));
-        if (btnColorEmerald != null) btnColorEmerald.setOnClickListener(v -> selectQrColor("#059669"));
-        if (btnColorViolet != null) btnColorViolet.setOnClickListener(v -> selectQrColor("#7C3AED"));
-        updateColorRings();
+    /** Pokazuje modalne okno dodawania kodu QR. */
+    public void setFormVisible(boolean visible) {
+        if (visible) {
+            showAddQrDialog();
+        }
     }
 
-    private void selectQrColor(String hex) {
-        this.selectedQrColor = hex;
-        updateColorRings();
+    /**
+     * Otwiera modalne okno dialogowe z formularzem tworzenia nowego kodu QR.
+     */
+    public void showAddQrDialog() {
+        if (activity == null) return;
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(activity);
+        View dialogView = LayoutInflater.from(activity).inflate(R.layout.dialog_add_qr, null, false);
+        builder.setView(dialogView);
+
+        AlertDialog dialog = builder.create();
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        }
+
+        PlatformSelectorController dialogPlatformSelector = new PlatformSelectorController(dialogView);
+        EditText etDialogName = dialogView.findViewById(R.id.etNewQrName);
+        EditText etDialogUrl = dialogView.findViewById(R.id.etNewQrUrl);
+        dialogPlatformSelector.attachAutoDetection(etDialogUrl, etDialogName, userProfile);
+
+        final String[] dialogSelectedColor = new String[]{"#0F172A"};
+        View btnObsidian = dialogView.findViewById(R.id.btnColorObsidian);
+        View btnBlue = dialogView.findViewById(R.id.btnColorBlue);
+        View btnGold = dialogView.findViewById(R.id.btnColorGold);
+        View btnEmerald = dialogView.findViewById(R.id.btnColorEmerald);
+        View btnViolet = dialogView.findViewById(R.id.btnColorViolet);
+
+        Runnable updateDialogRings = () -> {
+            setDialogRing(btnObsidian, "#0F172A", dialogSelectedColor[0]);
+            setDialogRing(btnBlue, "#2563EB", dialogSelectedColor[0]);
+            setDialogRing(btnGold, "#D97706", dialogSelectedColor[0]);
+            setDialogRing(btnEmerald, "#059669", dialogSelectedColor[0]);
+            setDialogRing(btnViolet, "#7C3AED", dialogSelectedColor[0]);
+        };
+
+        if (btnObsidian != null) btnObsidian.setOnClickListener(v -> { dialogSelectedColor[0] = "#0F172A"; updateDialogRings.run(); });
+        if (btnBlue != null) btnBlue.setOnClickListener(v -> { dialogSelectedColor[0] = "#2563EB"; updateDialogRings.run(); });
+        if (btnGold != null) btnGold.setOnClickListener(v -> { dialogSelectedColor[0] = "#D97706"; updateDialogRings.run(); });
+        if (btnEmerald != null) btnEmerald.setOnClickListener(v -> { dialogSelectedColor[0] = "#059669"; updateDialogRings.run(); });
+        if (btnViolet != null) btnViolet.setOnClickListener(v -> { dialogSelectedColor[0] = "#7C3AED"; updateDialogRings.run(); });
+        updateDialogRings.run();
+
+        Button btnCreate = dialogView.findViewById(R.id.btnCreateNewQr);
+        Button btnCancel = dialogView.findViewById(R.id.btnCancelNewQr);
+
+        if (btnCancel != null) {
+            btnCancel.setOnClickListener(v -> dialog.dismiss());
+        }
+
+        if (btnCreate != null) {
+            btnCreate.setOnClickListener(v -> {
+                String rawInput = etDialogUrl != null ? etDialogUrl.getText().toString().trim() : "";
+                if (rawInput.isEmpty()) {
+                    Toast.makeText(activity, "Wklej link lub wpisz nazwę użytkownika", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                SocialPlatform platform = dialogPlatformSelector.getSelectedPlatform();
+                String url = platform.buildUrl(rawInput);
+
+                String name = etDialogName != null ? etDialogName.getText().toString().trim() : "";
+                if (name.isEmpty()) {
+                    name = platform.getDisplayName();
+                }
+
+                UserQrItem createdItem = userQrManager.addItem(name, platform.getKey(), url, dialogSelectedColor[0]);
+                dialog.dismiss();
+                refreshViews();
+                Toast.makeText(activity, "Utworzono kod QR!", Toast.LENGTH_SHORT).show();
+
+                if (host != null) host.onQrCreated(createdItem);
+            });
+        }
+
+        dialog.show();
     }
 
-    private void updateColorRings() {
-        setRing(btnColorObsidian, "#0F172A");
-        setRing(btnColorBlue, "#2563EB");
-        setRing(btnColorGold, "#D97706");
-        setRing(btnColorEmerald, "#059669");
-        setRing(btnColorViolet, "#7C3AED");
-    }
-
-    private void setRing(View button, String hex) {
+    private void setDialogRing(View button, String hex, String selectedHex) {
         if (button == null) return;
-        button.setBackgroundResource(hex.equalsIgnoreCase(selectedQrColor)
+        button.setBackgroundResource(hex.equalsIgnoreCase(selectedHex)
                 ? R.drawable.qr_color_ring_selected
                 : R.drawable.qr_color_ring_unselected);
     }
@@ -212,46 +239,7 @@ public class DashboardController {
         QrScannerHelper.handlePermissionResult(activity, requestCode, permissions, grantResults);
     }
 
-    // ===================== TWORZENIE KODU QR =====================
 
-    private void setupCreateQrAction() {
-        Button btnCreate = activity.findViewById(R.id.btnCreateNewQr);
-        if (btnCreate == null) return;
-
-        btnCreate.setOnClickListener(v -> {
-            String rawInput = etNewQrUrl != null ? etNewQrUrl.getText().toString().trim() : "";
-            if (rawInput.isEmpty()) {
-                Toast.makeText(activity, "Wklej link lub wpisz nazwę użytkownika", Toast.LENGTH_SHORT).show();
-                return;
-            }
-
-            SocialPlatform platform = platformSelector.getSelectedPlatform();
-            String url = platform.buildUrl(rawInput);
-
-            String name = etNewQrName != null ? etNewQrName.getText().toString().trim() : "";
-            if (name.isEmpty()) {
-                name = platform.getDisplayName();
-            }
-
-            UserQrItem createdItem = userQrManager.addItem(name, platform.getKey(), url, selectedQrColor);
-
-            if (etNewQrName != null) {
-                etNewQrName.setText("");
-                etNewQrName.clearFocus();
-            }
-            if (etNewQrUrl != null) {
-                etNewQrUrl.setText("");
-                etNewQrUrl.clearFocus();
-            }
-
-            // Formularz zwija się po zapisaniu kodu.
-            setFormVisible(false);
-            refreshViews();
-            Toast.makeText(activity, "Utworzono kod QR!", Toast.LENGTH_SHORT).show();
-
-            if (host != null) host.onQrCreated(createdItem);
-        });
-    }
 
     // ===================== LISTA KODÓW QR =====================
 
@@ -295,12 +283,16 @@ public class DashboardController {
                         @Override
                         public void onFavoriteToggled(UserQrItem favItem, boolean isFavorite) {
                             userQrManager.saveItems();
+                            if (host != null) host.onQrUpdated(favItem);
                         }
 
                         @Override
                         public void onDeleteRequested(UserQrItem delItem) {
                             userQrManager.removeItem(delItem.getId());
-                            if (host != null) host.refreshAll();
+                            if (host != null) {
+                                host.onQrDeleted(delItem);
+                                host.refreshAll();
+                            }
                             Toast.makeText(activity, "Usunięto kod QR", Toast.LENGTH_SHORT).show();
                         }
                     });

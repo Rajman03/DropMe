@@ -82,17 +82,47 @@ public class PaywallController {
 
     private void openPayPalSupport() {
         int amount = isBigCoffee ? 10 : 5;
+        String planName = isBigCoffee ? "Duża Kawa (10 PLN)" : "Mała Kawa (5 PLN)";
         String url = "https://www.paypal.me/Rajman04/" + amount + "PLN";
+
+        // Aktywacja rangi Premium w Supabase i profilu
+        if (authManager != null) {
+            authManager.recordSelfPurchase(planName, amount, userProfile);
+        } else if (userProfile != null) {
+            userProfile.setPurchasedPremium(true);
+            if (!userProfile.isAdmin()) {
+                userProfile.setRank(UserProfile.RANK_PREMIUM);
+                userProfile.setAvatarEmoji("⭐");
+            }
+        }
+
+        if (tvPaywallStatusMsg != null) {
+            tvPaywallStatusMsg.setText("⭐ Posiadasz aktywny status Premium!");
+            tvPaywallStatusMsg.setVisibility(View.VISIBLE);
+        }
+
+        if (listener != null) {
+            listener.onPremiumPurchased();
+        }
+
         try {
             Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
             activity.startActivity(intent);
-            Toast.makeText(activity, "Otwieram stronę PayPal. Dziękujemy za wsparcie! ❤️", Toast.LENGTH_LONG).show();
-        } catch (Exception e) {
-            Toast.makeText(activity, "Nie można otworzyć linku: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-        }
+        } catch (Exception ignored) {}
+
+        Toast.makeText(activity, "⭐ Ranga Premium została aktywowana w Supabase! Dziękujemy za wsparcie! ❤️", Toast.LENGTH_LONG).show();
     }
 
     public void refreshViews() {
+        if (userProfile != null && userProfile.isPremium()) {
+            if (tvPaywallStatusMsg != null) {
+                tvPaywallStatusMsg.setText("⭐ Posiadasz aktywny status Premium!");
+                tvPaywallStatusMsg.setVisibility(View.VISIBLE);
+            }
+            if (btnTipPayPal != null) {
+                btnTipPayPal.setText(isBigCoffee ? "☕ POSTAW DODATKOWĄ DUŻĄ KAWĘ (10 ZŁ)" : "☕ POSTAW DODATKOWĄ MAŁĄ KAWĘ (5 ZŁ)");
+            }
+        }
         updateSelection(isBigCoffee);
     }
 }

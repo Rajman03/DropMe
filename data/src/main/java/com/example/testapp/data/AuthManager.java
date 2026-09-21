@@ -1,7 +1,10 @@
 package com.example.testapp.data;
 
 import com.example.testapp.core.AuthUser;
+import com.example.testapp.core.CredentialHasher;
 import com.example.testapp.core.UserProfile;
+import com.example.testapp.core.UserQrItem;
+import com.example.testapp.core.UserQrManager;
 
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -137,44 +140,79 @@ public class AuthManager {
         return null;
     }
 
-    public void registerInSupabase(String username, String password, String displayName, UserProfile profile, SupabaseClient.Callback<AuthUser> callback) {
+    public AuthUser findUserByEmail(String email) {
+        if (email == null) return null;
+        String normalized = email.trim().toLowerCase();
+        for (AuthUser u : users) {
+            if (normalized.equalsIgnoreCase(u.getEmail())) {
+                return u;
+            }
+        }
+        return null;
+    }
+
+    public void registerInSupabase(String username, String email, String password, UserProfile profile, SupabaseClient.Callback<AuthUser> callback) {
         if (username == null || username.trim().isEmpty()) {
-            if (callback != null) callback.onError("Podaj nazwę użytkownika (login)");
+            if (callback != null) callback.onError("Podaj nazwę użytkownika (Username)");
             return;
         }
         String normalizedUser = username.trim().toLowerCase();
         if (!normalizedUser.matches("^[a-z0-9._-]{3,32}$")) {
-            if (callback != null) callback.onError("Login musi mieć 3-32 znaki (litery, cyfry, . _ -)");
+            if (callback != null) callback.onError("Username musi mieć 3-32 znaki (litery, cyfry, . _ -)");
             return;
         }
-        if (password == null || password.length() < 3) {
-            if (callback != null) callback.onError("Hasło musi mieć co najmniej 3 znaki");
+
+        if (email == null || email.trim().isEmpty()) {
+            if (callback != null) callback.onError("Podaj adres e-mail");
+            return;
+        }
+        String cleanEmail = email.trim().toLowerCase();
+        if (!cleanEmail.matches("^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$")) {
+            if (callback != null) callback.onError("Podaj prawidłowy adres e-mail (np. nazwa@domena.pl)");
+            return;
+        }
+
+        // Jedno konto na jeden mail!
+        AuthUser existingWithEmail = findUserByEmail(cleanEmail);
+        if (existingWithEmail != null) {
+            if (callback != null) callback.onError("Ten adres e-mail jest już przypisany do innego konta!");
+            return;
+        }
+
+        // Unikalność nazwy użytkownika
+        AuthUser existingWithUsername = findUser(normalizedUser);
+        if (existingWithUsername != null) {
+            if (callback != null) callback.onError("Użytkownik o takim loginie już istnieje!");
+            return;
+        }
+
+        if (password == null || password.length() < 6) {
+            if (callback != null) callback.onError("Hasło musi mieć co najmniej 6 znaków");
             return;
         }
 
         String rank = UserProfile.RANK_GUEST;
         String avatar = "👤";
-        String realName = (displayName != null && !displayName.trim().isEmpty()) ? displayName.trim() : username;
+        String realName = username.trim();
         AuthUser newUser = new AuthUser(normalizedUser, realName, password, rank, "Użytkownik", avatar);
+        newUser.setEmail(cleanEmail);
 
-        // Save locally and log in immediately so user is never locked out
-        AuthUser existing = findUser(newUser.getUsername());
-        if (existing != null) users.remove(existing);
-        users.add(newUser);
-        saveUsers();
-        setCurrentUser(newUser, profile);
-
-        // Push to Supabase
+        // Push to Supabase - Wymóg: konto musi zostać zapisane w Supabase!
         supabaseClient.registerUser(newUser, new SupabaseClient.Callback<AuthUser>() {
             @Override
             public void onSuccess(AuthUser result) {
+                AuthUser ex = findUser(normalizedUser);
+                if (ex != null) users.remove(ex);
+                users.add(newUser);
+                saveUsers();
+                setCurrentUser(newUser, profile);
                 if (callback != null) callback.onSuccess(newUser);
             }
 
             @Override
             public void onError(String error) {
-                // User is in app, cloud status will reflect whether SQL fix is needed
-                if (callback != null) callback.onSuccess(newUser);
+                // Nie ukrywaj błędu - poinformuj użytkownika o przyczynie (np. blokada RLS w Supabase)
+                if (callback != null) callback.onError(error != null ? error : "Błąd rejestracji w Supabase");
             }
         });
     }
@@ -186,7 +224,11 @@ public class AuthManager {
         }
 
         String norm = username.trim().toLowerCase();
-        AuthUser local = findUser(norm);
+        AuthUser foundUser = findUser(norm);
+        if (foundUser == null && norm.contains("@")) {
+            foundUser = findUserByEmail(norm);
+        }
+        final AuthUser local = foundUser;
         if (local != null && local.verifyPassword(password)) {
             setCurrentUser(local, profile);
             if (callback != null) callback.onSuccess(local);
@@ -239,7 +281,7 @@ public class AuthManager {
         String normalizedUser = username.trim().toLowerCase();
         if (!normalizedUser.matches("^[a-z0-9._-]{3,32}$")) return false;
         if ("creator".equals(normalizedUser) || "admin".equals(normalizedUser)) return false;
-        if (password == null || password.length() < 3) return false;
+        if (password == null || password.length() < 6) return false;
 
         if (findUser(normalizedUser) != null) {
             return false; // already exists
@@ -393,6 +435,62 @@ public class AuthManager {
             profile.setTitle(currentUser.getTitle());
             profile.setPurchasedPremium(currentUser.isPurchasedPremium());
         }
+    }
+
+    public boolean updateUserPin(String targetUsername, String newPin, AuthUser operator, String[] outError) {
+        if (operator == null) {
+            if (outError != null && outError.length > 0) outError[0] = "Brak zalogowanego operatora";
+            return false;
+        }
+        if (targetUsername == null || targetUsername.trim().isEmpty()) {
+            if (outError != null && outError.length > 0) outError[0] = "Nie podano nazwy użytkownika";
+            return false;
+        }
+        String cleanTarget = targetUsername.trim().toLowerCase();
+        boolean isSelf = operator.getUsername().equalsIgnoreCase(cleanTarget);
+
+        if (!operator.isAdmin() && !operator.isCreator()) {
+            if (outError != null && outError.length > 0) outError[0] = "Opcja dostępna wyłącznie dla rangi Administrator lub Twórca";
+            return false;
+        }
+
+        AuthUser target = findUser(cleanTarget);
+        if (target != null && target.isCreator() && !operator.isCreator()) {
+            if (outError != null && outError.length > 0) outError[0] = "Administrator nie ma uprawnień do zmiany PINu Twórcy!";
+            return false;
+        }
+
+        if (!operator.isCreator() && !isSelf) {
+            if (outError != null && outError.length > 0) outError[0] = "Administrator może zmieniać kod PIN wyłącznie na własnym koncie!";
+            return false;
+        }
+        if (target != null && !target.isAdmin() && !target.isCreator()) {
+            if (outError != null && outError.length > 0) outError[0] = "Kod PIN jest zastrzeżony wyłącznie dla rangi Administrator lub Twórca";
+            return false;
+        }
+
+        if (newPin == null || newPin.trim().length() != 4 || !newPin.trim().matches("\\d{4}")) {
+            if (outError != null && outError.length > 0) outError[0] = "PIN musi składać się z 4 cyfr";
+            return false;
+        }
+
+        if (CredentialHasher.isTrivialPin(newPin)) {
+            if (outError != null && outError.length > 0) outError[0] = "PIN jest zbyt prosty (np. 1234, 0000)";
+            return false;
+        }
+
+        if (target != null) {
+            target.setPin(newPin);
+            saveUsers();
+            supabaseClient.syncUser(target, null);
+        }
+
+        if (currentUser != null && currentUser.getUsername().equalsIgnoreCase(cleanTarget)) {
+            currentUser.setPin(newPin);
+            saveUsers();
+        }
+
+        return true;
     }
 
     public boolean deleteUser(String targetUsername, AuthUser operator, String[] outError) {
@@ -645,5 +743,197 @@ public class AuthManager {
             profile.setPurchasedPremium(false);
             profile.setAvatarEmoji("👤");
         }
+    }
+
+    public boolean deleteSelfAccount(UserProfile profile, String[] outError) {
+        if (currentUser == null) {
+            if (outError != null && outError.length > 0) outError[0] = "Brak zalogowanego użytkownika";
+            return false;
+        }
+        if (currentUser.isCreator()) {
+            if (outError != null && outError.length > 0) outError[0] = "Konto Głównego Twórcy nie może zostać usunięte!";
+            return false;
+        }
+
+        String username = currentUser.getUsername();
+        users.remove(currentUser);
+        saveUsers();
+        supabaseClient.deleteUser(username, null);
+        logout(profile);
+        return true;
+    }
+
+    public boolean updateCurrentUserPassword(String newPassword, String[] outError) {
+        if (currentUser == null) {
+            if (outError != null && outError.length > 0) outError[0] = "Brak zalogowanego użytkownika";
+            return false;
+        }
+        if (newPassword == null || newPassword.length() < 6) {
+            if (outError != null && outError.length > 0) outError[0] = "Hasło musi mieć co najmniej 6 znaków";
+            return false;
+        }
+
+        currentUser.setPassword(newPassword);
+        saveUsers();
+        supabaseClient.syncUser(currentUser, null);
+        return true;
+    }
+
+    public boolean resetPasswordByEmail(String email, String newPassword, String[] outError) {
+        if (email == null || email.trim().isEmpty()) {
+            if (outError != null && outError.length > 0) outError[0] = "Podaj adres e-mail";
+            return false;
+        }
+        AuthUser user = findUserByEmail(email.trim().toLowerCase());
+        if (user == null) {
+            if (outError != null && outError.length > 0) outError[0] = "Nie znaleziono konta powiązanego z tym adresem e-mail";
+            return false;
+        }
+        if (newPassword == null || newPassword.length() < 6) {
+            if (outError != null && outError.length > 0) outError[0] = "Hasło musi mieć co najmniej 6 znaków";
+            return false;
+        }
+
+        user.setPassword(newPassword);
+        saveUsers();
+        supabaseClient.syncUser(user, null);
+        return true;
+    }
+
+    public void syncQrCodesWithCloud(UserQrManager qrManager, Runnable onDone) {
+        if (currentUser == null || qrManager == null) {
+            if (onDone != null) onDone.run();
+            return;
+        }
+
+        String username = currentUser.getUsername();
+        supabaseClient.fetchQrCodes(username, new SupabaseClient.Callback<List<UserQrItem>>() {
+            @Override
+            public void onSuccess(List<UserQrItem> cloudItems) {
+                List<UserQrItem> localItems = qrManager.getItems();
+                boolean changed = false;
+                if (cloudItems != null) {
+                    for (UserQrItem cloudItem : cloudItems) {
+                        boolean exists = false;
+                        for (UserQrItem localItem : localItems) {
+                            if (localItem.getId() == cloudItem.getId()) {
+                                exists = true;
+                                break;
+                            }
+                        }
+                        if (!exists) {
+                            localItems.add(cloudItem);
+                            changed = true;
+                        }
+                    }
+                }
+
+                for (UserQrItem localItem : localItems) {
+                    boolean inCloud = false;
+                    if (cloudItems != null) {
+                        for (UserQrItem c : cloudItems) {
+                            if (c.getId() == localItem.getId()) {
+                                inCloud = true;
+                                break;
+                            }
+                        }
+                    }
+                    if (!inCloud) {
+                        supabaseClient.saveQrCode(username, localItem, null);
+                    }
+                }
+
+                if (changed) {
+                    qrManager.saveItems();
+                }
+                if (onDone != null) onDone.run();
+            }
+
+            @Override
+            public void onError(String error) {
+                if (onDone != null) onDone.run();
+            }
+        });
+    }
+
+    public void saveQrCodeToCloud(UserQrItem item) {
+        if (currentUser == null || item == null) return;
+        supabaseClient.saveQrCode(currentUser.getUsername(), item, null);
+    }
+
+    public void deleteQrCodeFromCloud(long qrId) {
+        if (currentUser == null) return;
+        supabaseClient.deleteQrCode(qrId, null);
+    }
+
+    /** Supabase Auth wysyła 6-cyfrowy kod na e-mail. */
+    public void sendEmailOtp(String email, SupabaseClient.Callback<Boolean> callback) {
+        supabaseClient.sendEmailOtp(email, callback);
+    }
+
+    /** Supabase Auth sprawdza kod wpisany przez użytkownika. */
+    public void verifyEmailOtp(String email, String code, SupabaseClient.Callback<Boolean> callback) {
+        supabaseClient.verifyEmailOtp(email, code, callback);
+    }
+
+    /**
+     * Waliduje nowy adres e-mail przed rozpoczęciem procedury zmiany.
+     * Zwraca znormalizowany adres lub null (z opisem błędu w outError).
+     */
+    public String validateNewEmail(String newEmail, String[] outError) {
+        if (currentUser == null) {
+            if (outError != null && outError.length > 0) outError[0] = "Brak zalogowanego użytkownika";
+            return null;
+        }
+        if (currentUser.isGuest()) {
+            if (outError != null && outError.length > 0) outError[0] = "Konto gościa nie posiada adresu e-mail. Zarejestruj się!";
+            return null;
+        }
+        if (newEmail == null || newEmail.trim().isEmpty()) {
+            if (outError != null && outError.length > 0) outError[0] = "Podaj nowy adres e-mail";
+            return null;
+        }
+        String clean = newEmail.trim().toLowerCase();
+        if (!clean.matches("^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$")) {
+            if (outError != null && outError.length > 0) outError[0] = "Podaj prawidłowy adres e-mail (np. nazwa@domena.pl)";
+            return null;
+        }
+        String currentEmail = currentUser.getEmail();
+        if (currentEmail != null && currentEmail.equalsIgnoreCase(clean)) {
+            if (outError != null && outError.length > 0) outError[0] = "To jest Twój aktualny adres e-mail";
+            return null;
+        }
+        AuthUser taken = findUserByEmail(clean);
+        if (taken != null && !taken.getUsername().equals(currentUser.getUsername())) {
+            if (outError != null && outError.length > 0) outError[0] = "Ten adres e-mail jest już przypisany do innego konta!";
+            return null;
+        }
+        return clean;
+    }
+
+    /**
+     * Zapisuje nowy adres e-mail po poprawnej weryfikacji kodu ze STAREGO e-maila.
+     * Aktualizuje konto lokalnie oraz w Supabase.
+     */
+    public boolean applyEmailChange(String newEmail, String[] outError) {
+        if (currentUser == null) {
+            if (outError != null && outError.length > 0) outError[0] = "Brak zalogowanego użytkownika";
+            return false;
+        }
+        if (newEmail == null || newEmail.trim().isEmpty()) {
+            if (outError != null && outError.length > 0) outError[0] = "Brak nowego adresu e-mail";
+            return false;
+        }
+        String clean = newEmail.trim().toLowerCase();
+        AuthUser taken = findUserByEmail(clean);
+        if (taken != null && !taken.getUsername().equals(currentUser.getUsername())) {
+            if (outError != null && outError.length > 0) outError[0] = "Ten adres e-mail jest już przypisany do innego konta!";
+            return false;
+        }
+
+        currentUser.setEmail(clean);
+        saveUsers();
+        supabaseClient.updateUserEmail(currentUser.getUsername(), clean, null);
+        return true;
     }
 }

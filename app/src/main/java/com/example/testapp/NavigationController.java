@@ -21,7 +21,7 @@ public class NavigationController {
     private final Activity activity;
     private final UserProfile userProfile;
 
-    private ScrollView layoutDashboard;
+    private View layoutDashboard;
     private ScrollView layoutPaywall;
     private ScrollView layoutProfile;
 

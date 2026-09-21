@@ -16,6 +16,7 @@ import java.util.Map;
 public class PlatformSelectorController {
 
     private final Activity activity;
+    private final View rootView;
     private final Map<SocialPlatform, PlatformItemViews> itemViewsMap = new HashMap<>();
     private SocialPlatform selectedPlatform = SocialPlatform.INSTAGRAM;
 
@@ -31,6 +32,14 @@ public class PlatformSelectorController {
 
     public PlatformSelectorController(Activity activity) {
         this.activity = activity;
+        this.rootView = activity != null ? activity.getWindow().getDecorView() : null;
+        bindViews();
+        selectPlatform(SocialPlatform.INSTAGRAM);
+    }
+
+    public PlatformSelectorController(View rootView) {
+        this.activity = null;
+        this.rootView = rootView;
         bindViews();
         selectPlatform(SocialPlatform.INSTAGRAM);
     }
@@ -50,8 +59,9 @@ public class PlatformSelectorController {
     }
 
     private void register(SocialPlatform platform, int layoutId, int labelId) {
-        LinearLayout layout = activity.findViewById(layoutId);
-        TextView label = activity.findViewById(labelId);
+        if (rootView == null) return;
+        LinearLayout layout = rootView.findViewById(layoutId);
+        TextView label = rootView.findViewById(labelId);
         if (layout != null && label != null) {
             itemViewsMap.put(platform, new PlatformItemViews(layout, label));
             layout.setOnClickListener(v -> selectPlatform(platform));

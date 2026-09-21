@@ -69,6 +69,7 @@ public class MainActivity extends Activity {
 
         if (authManager.isLoggedIn()) {
             authManager.syncWithSupabase(userProfile, this::refreshAllUi);
+            authManager.syncQrCodesWithCloud(userQrManager, this::refreshAllUi);
         }
     }
 
@@ -77,6 +78,7 @@ public class MainActivity extends Activity {
         super.onResume();
         if (authManager != null && authManager.isLoggedIn()) {
             authManager.syncWithSupabase(userProfile, this::refreshAllUi);
+            authManager.syncQrCodesWithCloud(userQrManager, this::refreshAllUi);
         }
     }
 
@@ -158,14 +160,36 @@ public class MainActivity extends Activity {
     private void initControllers() {
         navigationController = new NavigationController(this, userProfile);
 
-        authController = new AuthController(this, authManager, userProfile, this::refreshAllUi);
+        authController = new AuthController(this, authManager, userProfile, () -> {
+            refreshAllUi();
+            if (authManager.isLoggedIn()) {
+                authManager.syncQrCodesWithCloud(userQrManager, this::refreshAllUi);
+            }
+        });
         authController.attachMainAppView(layoutMainApp);
 
         dashboardController = new DashboardController(this, userQrManager, multiLinkProfile, userProfile,
                 new DashboardController.Host() {
                     @Override
                     public void onQrCreated(UserQrItem item) {
+                        if (authManager != null && authManager.isLoggedIn() && item != null) {
+                            authManager.saveQrCodeToCloud(item);
+                        }
                         QrDetailsDialog.show(MainActivity.this, item);
+                    }
+
+                    @Override
+                    public void onQrUpdated(UserQrItem item) {
+                        if (authManager != null && authManager.isLoggedIn() && item != null) {
+                            authManager.saveQrCodeToCloud(item);
+                        }
+                    }
+
+                    @Override
+                    public void onQrDeleted(UserQrItem item) {
+                        if (authManager != null && authManager.isLoggedIn() && item != null) {
+                            authManager.deleteQrCodeFromCloud(item.getId());
+                        }
                     }
 
                     @Override

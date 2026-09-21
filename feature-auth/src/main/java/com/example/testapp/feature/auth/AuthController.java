@@ -11,10 +11,18 @@ import com.example.testapp.core.UserProfile;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.Dialog;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
+import android.text.InputFilter;
+import android.text.InputType;
+import android.view.Gravity;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.FrameLayout;
@@ -22,6 +30,10 @@ import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import org.json.JSONObject;
 
 public class AuthController {
 
@@ -41,11 +53,13 @@ public class AuthController {
     // Login & Register Form views
     private Button tabLogin;
     private Button tabRegister;
-    private LinearLayout groupName;
+    private LinearLayout groupEmail;
 
-    private EditText etName;
+    private TextView tvLoginLabel;
+    private EditText etEmail;
     private EditText etLogin;
     private EditText etPassword;
+    private TextView tvForgotPassword;
 
     private Button btnSubmit;
     private FrameLayout btnLogoSecret;
@@ -92,11 +106,13 @@ public class AuthController {
 
         tabLogin = activity.findViewById(R.id.tabAuthLogin);
         tabRegister = activity.findViewById(R.id.tabAuthRegister);
-        groupName = activity.findViewById(R.id.groupAuthName);
+        groupEmail = activity.findViewById(R.id.groupAuthEmail);
 
-        etName = activity.findViewById(R.id.etAuthName);
+        tvLoginLabel = activity.findViewById(R.id.tvAuthLoginLabel);
+        etEmail = activity.findViewById(R.id.etAuthEmail);
         etLogin = activity.findViewById(R.id.etAuthLogin);
         etPassword = activity.findViewById(R.id.etAuthPassword);
+        tvForgotPassword = activity.findViewById(R.id.tvAuthForgotPassword);
 
         btnSubmit = activity.findViewById(R.id.btnAuthSubmit);
         btnLogoSecret = activity.findViewById(R.id.btnAuthLogoSecret);
@@ -137,6 +153,10 @@ public class AuthController {
 
         if (tvAuthPrivacyPolicy != null) {
             tvAuthPrivacyPolicy.setOnClickListener(v -> PrivacyPolicyDialog.show(activity));
+        }
+
+        if (tvForgotPassword != null) {
+            tvForgotPassword.setOnClickListener(v -> showForgotPasswordDialog());
         }
 
         // Logo has no backdoors
@@ -311,14 +331,197 @@ public class AuthController {
             tabRegister.setTextColor(activity.getColor(register ? R.color.white : R.color.text_secondary));
         }
 
-        if (groupName != null) groupName.setVisibility(register ? View.VISIBLE : View.GONE);
+        if (tvLoginLabel != null) {
+            tvLoginLabel.setText(register ? "Nazwa użytkownika (Username)" : "Login");
+        }
+
+        if (etLogin != null) {
+            etLogin.setHint(register ? "np. jan_kowalski" : "Wpisz login lub e-mail");
+        }
+
+        if (groupEmail != null) {
+            groupEmail.setVisibility(register ? View.VISIBLE : View.GONE);
+        }
+
+        if (tvForgotPassword != null) {
+            tvForgotPassword.setVisibility(register ? View.GONE : View.VISIBLE);
+        }
 
         if (btnSubmit != null) {
-            btnSubmit.setText(register ? "Zarejestruj się i odblokuj" : "Zaloguj się");
+            btnSubmit.setText(register ? "Zarejestruj się i potwierdź e-mail" : "Zaloguj się");
         }
     }
 
     private void handleAuthSubmit() {
+        if (isRegisterMode) {
+            handleRegisterSubmit();
+        } else {
+            handleLoginSubmit();
+        }
+    }
+
+    private void handleRegisterSubmit() {
+        String username = etLogin != null ? etLogin.getText().toString().trim() : "";
+        String email = etEmail != null ? etEmail.getText().toString().trim() : "";
+        String pass = etPassword != null ? etPassword.getText().toString().trim() : "";
+
+        if (username.isEmpty()) {
+            Toast.makeText(activity, "Podaj nazwę użytkownika (Username)", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        if (!username.matches("^[a-zA-Z0-9._-]{3,32}$")) {
+            Toast.makeText(activity, "Username musi mieć 3-32 znaki (litery, cyfry, . _ -)", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        if (email.isEmpty() || !email.matches("^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$")) {
+            Toast.makeText(activity, "Podaj prawidłowy adres e-mail (np. nazwa@domena.pl)", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        if (pass.length() < 6) {
+            Toast.makeText(activity, "Hasło musi mieć co najmniej 6 znaków", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        if (authManager.findUser(username) != null) {
+            Toast.makeText(activity, "Użytkownik o takim loginie już istnieje!", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        if (authManager.findUserByEmail(email) != null) {
+            Toast.makeText(activity, "Ten adres e-mail jest już przypisany do innego konta!", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        long createdAt = System.currentTimeMillis();
+
+        if (btnSubmit != null) {
+            btnSubmit.setEnabled(false);
+            btnSubmit.setText("Wysyłanie kodu...");
+        }
+
+        authManager.sendEmailOtp(email, new SupabaseClient.Callback<Boolean>() {
+            @Override
+            public void onSuccess(Boolean result) {
+                if (btnSubmit != null) {
+                    btnSubmit.setEnabled(true);
+                    btnSubmit.setText("Zarejestruj się");
+                }
+                showEmailVerificationDialog(username, email, pass, createdAt);
+            }
+
+            @Override
+            public void onError(String error) {
+                if (btnSubmit != null) {
+                    btnSubmit.setEnabled(true);
+                    btnSubmit.setText("Zarejestruj się");
+                }
+                showEmailSendErrorDialog(error);
+            }
+        });
+    }
+
+    private void showEmailVerificationDialog(String username, String email, String password, long codeCreatedAt) {
+        Dialog dialog = new Dialog(activity);
+        View dialogView = LayoutInflater.from(activity).inflate(R.layout.dialog_email_verify, null, false);
+        dialog.setContentView(dialogView);
+
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+            int width = (int) (activity.getResources().getDisplayMetrics().widthPixels * 0.90);
+            dialog.getWindow().setLayout(width, ViewGroup.LayoutParams.WRAP_CONTENT);
+        }
+
+        TextView tvEmail = dialogView.findViewById(R.id.tvVerifyEmail);
+        EditText etCode = dialogView.findViewById(R.id.etVerifyCode);
+        TextView tvInfo = dialogView.findViewById(R.id.tvVerifyInfo);
+        Button btnConfirm = dialogView.findViewById(R.id.btnConfirmVerify);
+        Button btnCancel = dialogView.findViewById(R.id.btnCancelVerify);
+
+        if (tvEmail != null) tvEmail.setText(email);
+        if (tvInfo != null) {
+            tvInfo.setText("⏱️ Kod jest ważny przez 10 minut. Jeśli nie widzisz wiadomości, sprawdź folder SPAM.");
+        }
+
+        final int[] attemptsLeft = new int[]{3};
+
+        if (btnCancel != null) {
+            btnCancel.setOnClickListener(v -> dialog.dismiss());
+        }
+
+        if (btnConfirm != null) {
+            btnConfirm.setOnClickListener(v -> {
+                if (System.currentTimeMillis() - codeCreatedAt > 10 * 60 * 1000) {
+                    Toast.makeText(activity, "Kod weryfikacyjny wygasł (ważny 10 minut). Zarejestruj się ponownie.", Toast.LENGTH_LONG).show();
+                    dialog.dismiss();
+                    return;
+                }
+
+                String entered = etCode != null ? etCode.getText().toString().trim() : "";
+                if (entered.length() != 6) {
+                    Toast.makeText(activity, "Wpisz 6-cyfrowy kod z e-maila", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                btnConfirm.setEnabled(false);
+                btnConfirm.setText("Weryfikacja kodu...");
+
+                authManager.verifyEmailOtp(email, entered, new SupabaseClient.Callback<Boolean>() {
+                    @Override
+                    public void onSuccess(Boolean ok) {
+                        // Kod poprawny - zapis profilu w Supabase
+                        btnConfirm.setText("Zapisywanie profilu w Supabase...");
+                        authManager.registerInSupabase(username, email, password, userProfile, new SupabaseClient.Callback<AuthUser>() {
+                            @Override
+                            public void onSuccess(AuthUser user) {
+                                dialog.dismiss();
+                                Toast.makeText(activity, "✓ Konto @" + user.getUsername() + " zostało pomyślnie utworzone!", Toast.LENGTH_LONG).show();
+                                clearInputs();
+                                dismissAuth();
+                            }
+
+                            @Override
+                            public void onError(String error) {
+                                btnConfirm.setEnabled(true);
+                                btnConfirm.setText("Potwierdź i utwórz konto");
+                                showSqlErrorDialog("Błąd zapisu profilu w Supabase: " + (error != null ? error : "Brak uprawnień RLS"));
+                            }
+                        });
+                    }
+
+                    @Override
+                    public void onError(String error) {
+                        btnConfirm.setEnabled(true);
+                        btnConfirm.setText("Potwierdź i utwórz konto");
+
+                        if (!SupabaseClient.ERR_INVALID_OTP.equals(error)) {
+                            // Błąd sieci / konfiguracji - nie zużywa prób
+                            Toast.makeText(activity, error != null ? error : "Błąd weryfikacji kodu", Toast.LENGTH_LONG).show();
+                            return;
+                        }
+
+                        attemptsLeft[0]--;
+                        if (attemptsLeft[0] <= 0) {
+                            Toast.makeText(activity, "Wykorzystano 3 próby. Zarejestruj się ponownie, aby dostać nowy kod.", Toast.LENGTH_LONG).show();
+                            dialog.dismiss();
+                            return;
+                        }
+                        if (tvInfo != null) {
+                            tvInfo.setText("⚠️ Nieprawidłowy kod! Pozostało prób: " + attemptsLeft[0]);
+                            tvInfo.setTextColor(0xFFEF4444);
+                        }
+                        Toast.makeText(activity, "Nieprawidłowy kod weryfikacyjny! Pozostało prób: " + attemptsLeft[0], Toast.LENGTH_SHORT).show();
+                    }
+                });
+            });
+        }
+
+        dialog.show();
+    }
+
+    private void handleLoginSubmit() {
         String login = etLogin != null ? etLogin.getText().toString().trim() : "";
         String pass = etPassword != null ? etPassword.getText().toString().trim() : "";
 
@@ -327,88 +530,225 @@ public class AuthController {
             return;
         }
 
-        if (isRegisterMode) {
-            String name = etName != null ? etName.getText().toString().trim() : "";
+        if (loginThrottle.isLocked()) {
+            long sec = loginThrottle.getRemainingSeconds();
+            Toast.makeText(activity, "Zbyt wiele prób logowania. Odczekaj " + sec + " s.", Toast.LENGTH_LONG).show();
+            return;
+        }
 
-            if (name.isEmpty()) {
-                Toast.makeText(activity, "Podaj imię i nazwisko", Toast.LENGTH_SHORT).show();
-                return;
-            }
+        if (btnSubmit != null) {
+            btnSubmit.setEnabled(false);
+            btnSubmit.setText("Logowanie...");
+        }
 
-            if (btnSubmit != null) {
-                btnSubmit.setEnabled(false);
-                btnSubmit.setText("Rejestracja w Supabase...");
-            }
+        authManager.loginInSupabase(login, pass, userProfile, new SupabaseClient.Callback<AuthUser>() {
+            @Override
+            public void onSuccess(AuthUser user) {
+                if (btnSubmit != null) {
+                    btnSubmit.setEnabled(true);
+                    btnSubmit.setText("Zaloguj się");
+                }
+                loginThrottle.recordSuccess();
 
-            authManager.registerInSupabase(login, pass, name, userProfile, new SupabaseClient.Callback<AuthUser>() {
-                @Override
-                public void onSuccess(AuthUser user) {
-                    if (btnSubmit != null) {
-                        btnSubmit.setEnabled(true);
-                        btnSubmit.setText(isRegisterMode ? "Zarejestruj się i odblokuj" : "Zaloguj się");
-                    }
-                    Toast.makeText(activity, "✓ Konto @" + user.getUsername() + " utworzone!", Toast.LENGTH_SHORT).show();
+                if ((user.isAdmin() || user.isCreator()) && user.getPin() != null && !user.getPin().isEmpty()) {
+                    showPinScreen(user);
+                } else {
+                    authManager.setCurrentUser(user, userProfile);
+                    Toast.makeText(activity, "✓ Zalogowano pomyślnie!", Toast.LENGTH_SHORT).show();
                     clearInputs();
                     dismissAuth();
                 }
-
-                @Override
-                public void onError(String error) {
-                    if (btnSubmit != null) {
-                        btnSubmit.setEnabled(true);
-                        btnSubmit.setText(isRegisterMode ? "Zarejestruj się i odblokuj" : "Zaloguj się");
-                    }
-                    Toast.makeText(activity, error != null ? error : "Błąd rejestracji", Toast.LENGTH_SHORT).show();
-                }
-            });
-        } else {
-            if (loginThrottle.isLocked()) {
-                long sec = loginThrottle.getRemainingSeconds();
-                Toast.makeText(activity, "Zbyt wiele prób logowania. Odczekaj " + sec + " s.", Toast.LENGTH_LONG).show();
-                return;
             }
 
-            if (btnSubmit != null) {
-                btnSubmit.setEnabled(false);
-                btnSubmit.setText("Logowanie...");
+            @Override
+            public void onError(String error) {
+                if (btnSubmit != null) {
+                    btnSubmit.setEnabled(true);
+                    btnSubmit.setText("Zaloguj się");
+                }
+                loginThrottle.recordFailure();
+                Toast.makeText(activity, error != null ? error : "Nieprawidłowy login lub hasło", Toast.LENGTH_SHORT).show();
             }
+        });
+    }
 
-            authManager.loginInSupabase(login, pass, userProfile, new SupabaseClient.Callback<AuthUser>() {
-                @Override
-                public void onSuccess(AuthUser user) {
-                    if (btnSubmit != null) {
-                        btnSubmit.setEnabled(true);
-                        btnSubmit.setText("Zaloguj się");
-                    }
-                    loginThrottle.recordSuccess();
+    private void showForgotPasswordDialog() {
+        Dialog dialog = new Dialog(activity);
+        View dialogView = LayoutInflater.from(activity).inflate(R.layout.dialog_forgot_password, null, false);
+        dialog.setContentView(dialogView);
 
-                    if ((user.isAdmin() || user.isCreator()) && user.getPin() != null && !user.getPin().isEmpty()) {
-                        showPinScreen(user);
-                    } else {
-                        authManager.setCurrentUser(user, userProfile);
-                        Toast.makeText(activity, "✓ Zalogowano pomyślnie!", Toast.LENGTH_SHORT).show();
-                        clearInputs();
-                        dismissAuth();
-                    }
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+            int width = (int) (activity.getResources().getDisplayMetrics().widthPixels * 0.90);
+            dialog.getWindow().setLayout(width, ViewGroup.LayoutParams.WRAP_CONTENT);
+        }
+
+        EditText etForgotEmail = dialogView.findViewById(R.id.etForgotEmail);
+        Button btnSubmit = dialogView.findViewById(R.id.btnSubmitForgotEmail);
+        Button btnCancel = dialogView.findViewById(R.id.btnCancelForgotEmail);
+
+        if (btnCancel != null) {
+            btnCancel.setOnClickListener(v -> dialog.dismiss());
+        }
+
+        if (btnSubmit != null) {
+            btnSubmit.setOnClickListener(v -> {
+                String email = etForgotEmail != null ? etForgotEmail.getText().toString().trim().toLowerCase() : "";
+                if (email.isEmpty() || !email.matches("^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$")) {
+                    Toast.makeText(activity, "Podaj prawidłowy adres e-mail", Toast.LENGTH_SHORT).show();
+                    return;
                 }
 
-                @Override
-                public void onError(String error) {
-                    if (btnSubmit != null) {
-                        btnSubmit.setEnabled(true);
-                        btnSubmit.setText("Zaloguj się");
-                    }
-                    loginThrottle.recordFailure();
-                    Toast.makeText(activity, error != null ? error : "Nieprawidłowy login lub hasło", Toast.LENGTH_SHORT).show();
+                AuthUser existing = authManager.findUserByEmail(email);
+                if (existing == null) {
+                    Toast.makeText(activity, "Nie znaleziono konta powiązanego z adresem " + email, Toast.LENGTH_LONG).show();
+                    return;
                 }
+
+                if (btnSubmit != null) {
+                    btnSubmit.setEnabled(false);
+                    btnSubmit.setText("Wysyłanie kodu...");
+                }
+
+                long createdAt = System.currentTimeMillis();
+
+                authManager.sendEmailOtp(email, new SupabaseClient.Callback<Boolean>() {
+                    @Override
+                    public void onSuccess(Boolean result) {
+                        dialog.dismiss();
+                        Toast.makeText(activity, "✓ Wysłaliśmy kod na adres " + email, Toast.LENGTH_LONG).show();
+                        showResetPasswordDialog(email, createdAt);
+                    }
+
+                    @Override
+                    public void onError(String error) {
+                        if (btnSubmit != null) {
+                            btnSubmit.setEnabled(true);
+                            btnSubmit.setText("Wyślij kod weryfikacyjny");
+                        }
+                        showEmailSendErrorDialog(error);
+                    }
+                });
             });
         }
+
+        dialog.show();
+    }
+
+    private void showResetPasswordDialog(String email, long codeCreatedAt) {
+        Dialog dialog = new Dialog(activity);
+        View dialogView = LayoutInflater.from(activity).inflate(R.layout.dialog_reset_password, null, false);
+        dialog.setContentView(dialogView);
+
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+            int width = (int) (activity.getResources().getDisplayMetrics().widthPixels * 0.90);
+            dialog.getWindow().setLayout(width, ViewGroup.LayoutParams.WRAP_CONTENT);
+        }
+
+        TextView tvInfo = dialogView.findViewById(R.id.tvResetEmailInfo);
+        EditText etCode = dialogView.findViewById(R.id.etResetCode);
+        EditText etNewPass = dialogView.findViewById(R.id.etResetNewPass);
+        EditText etConfirmPass = dialogView.findViewById(R.id.etResetConfirmPass);
+        Button btnSubmit = dialogView.findViewById(R.id.btnSubmitResetPassword);
+        Button btnCancel = dialogView.findViewById(R.id.btnCancelResetPassword);
+
+        if (tvInfo != null) {
+            tvInfo.setText("Wysłaliśmy 6-cyfrowy kod na adres:\n" + email + "\n(sprawdź też folder SPAM)");
+        }
+
+        final int[] attemptsLeft = new int[]{3};
+
+        if (btnCancel != null) {
+            btnCancel.setOnClickListener(v -> dialog.dismiss());
+        }
+
+        if (btnSubmit != null) {
+            btnSubmit.setOnClickListener(v -> {
+                if (System.currentTimeMillis() - codeCreatedAt > 10 * 60 * 1000) {
+                    Toast.makeText(activity, "Kod weryfikacyjny wygasł (ważny 10 minut). Wyślij kod ponownie.", Toast.LENGTH_LONG).show();
+                    dialog.dismiss();
+                    return;
+                }
+
+                String enteredCode = etCode != null ? etCode.getText().toString().trim() : "";
+                String newPass = etNewPass != null ? etNewPass.getText().toString().trim() : "";
+                String confirmPass = etConfirmPass != null ? etConfirmPass.getText().toString().trim() : "";
+
+                if (enteredCode.isEmpty()) {
+                    Toast.makeText(activity, "Wpisz 6-cyfrowy kod z e-maila", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                if (newPass.length() < 6) {
+                    Toast.makeText(activity, "Hasło musi mieć co najmniej 6 znaków!", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                if (!newPass.equals(confirmPass)) {
+                    Toast.makeText(activity, "Nowe hasła nie są identyczne!", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                btnSubmit.setEnabled(false);
+                btnSubmit.setText("Weryfikacja w Supabase...");
+
+                authManager.verifyEmailOtp(email, enteredCode, new SupabaseClient.Callback<Boolean>() {
+                    @Override
+                    public void onSuccess(Boolean ok) {
+                        String[] outErr = new String[1];
+                        if (authManager.resetPasswordByEmail(email, newPass, outErr)) {
+                            dialog.dismiss();
+                            Toast.makeText(activity, "✓ Hasło zostało zmienione! Możesz się teraz zalogować.", Toast.LENGTH_LONG).show();
+                            setMode(false);
+                            if (etLogin != null) etLogin.setText(email);
+                            if (etPassword != null) etPassword.setText("");
+                        } else {
+                            btnSubmit.setEnabled(true);
+                            btnSubmit.setText("Ustaw nowe hasło");
+                            Toast.makeText(activity, outErr[0] != null ? outErr[0] : "Błąd resetu hasła", Toast.LENGTH_LONG).show();
+                        }
+                    }
+
+                    @Override
+                    public void onError(String error) {
+                        btnSubmit.setEnabled(true);
+                        btnSubmit.setText("Ustaw nowe hasło");
+
+                        if (!SupabaseClient.ERR_INVALID_OTP.equals(error)) {
+                            Toast.makeText(activity, error != null ? error : "Błąd weryfikacji kodu", Toast.LENGTH_LONG).show();
+                            return;
+                        }
+
+                        attemptsLeft[0]--;
+                        if (attemptsLeft[0] <= 0) {
+                            Toast.makeText(activity, "Wykorzystano limit 3 prób. Wyślij kod ponownie.", Toast.LENGTH_LONG).show();
+                            dialog.dismiss();
+                            return;
+                        }
+                        Toast.makeText(activity, "Nieprawidłowy kod! Pozostało prób: " + attemptsLeft[0], Toast.LENGTH_SHORT).show();
+                    }
+                });
+            });
+        }
+
+        dialog.show();
+    }
+
+    private void showEmailSendErrorDialog(String error) {
+        new AlertDialog.Builder(activity)
+                .setTitle("Nie udało się wysłać e-maila")
+                .setMessage(error != null && !error.isEmpty() ? error : "Nieznany błąd Supabase Auth.")
+                .setPositiveButton("OK", null)
+                .show();
     }
 
     private void showSqlErrorDialog(String error) {
+        String msg = (error != null && !error.isEmpty())
+                ? ("⚠️ " + error + "\n\n")
+                : "";
         new AlertDialog.Builder(activity)
-                .setTitle("🛠️ Połączenie z Supabase")
-                .setMessage("Aby włączyć chmurę Supabase:\n1. Otwórz w przeglądarce Supabase -> SQL Editor\n2. Kliknij poniższy przycisk, aby skopiować kod SQL\n3. Wklej w SQL Editor i kliknij 'Run'")
+                .setTitle("🛠️ Supabase - Wymagana konfiguracja")
+                .setMessage(msg + "Baza Supabase zablokowała zapis przez Row Level Security (RLS).\n\nAby to naprawić:\n1. Otwórz w przeglądarce: Supabase -> SQL Editor\n2. Kliknij poniższy przycisk 'KOPIUJ KOD SQL'\n3. Wklej w SQL Editor i kliknij 'Run'")
                 .setPositiveButton("📋 KOPIUJ KOD SQL", (dialog, which) -> {
                     String sql = SupabaseSqlFix.SQL;
 
@@ -426,7 +766,7 @@ public class AuthController {
     private void clearInputs() {
         if (etLogin != null) etLogin.setText("");
         if (etPassword != null) etPassword.setText("");
-        if (etName != null) etName.setText("");
+        if (etEmail != null) etEmail.setText("");
         enteredPin.setLength(0);
     }
 

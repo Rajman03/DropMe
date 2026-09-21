@@ -4,9 +4,10 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:background="@color/background"
+    android:fitsSystemWindows="true"
     android:paddingHorizontal="16dp"
     android:paddingTop="16dp"
-    android:paddingBottom="20dp">
+    android:paddingBottom="56dp">
 
     <!-- Header bar -->
     <LinearLayout
@@ -34,7 +35,7 @@
                 android:id="@+id/tvManagementOperatorRole"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="👑 Zalogowano: Creator"
+                android:text="Zalogowano: Creator"
                 android:textSize="12sp"
                 android:textColor="@color/text_secondary"
                 android:layout_marginTop="2dp" />
@@ -93,9 +94,14 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="⚡"
-            android:textSize="16sp"
-            android:layout_marginEnd="6dp" />
+            android:text="Supabase"
+            android:textSize="10sp"
+            android:textStyle="bold"
+            android:textColor="@color/text_secondary"
+            android:background="@drawable/badge_status_info"
+            android:paddingHorizontal="8dp"
+            android:paddingVertical="3dp"
+            android:layout_marginEnd="8dp" />
 
         <TextView
             android:id="@+id/tvSupabaseSyncStatus"
@@ -132,7 +138,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="🔍"
-            android:textSize="14sp"
+            android:textSize="13sp"
             android:layout_marginEnd="8dp" />
 
         <EditText

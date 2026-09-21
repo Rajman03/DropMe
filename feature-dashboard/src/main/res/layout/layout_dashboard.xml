@@ -1,15 +1,19 @@
-<?xml version="1.0" encoding="utf-8"?>
-<ScrollView
+<FrameLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/layoutDashboard"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:visibility="visible"
-    android:scrollbars="none"
-    android:clipToPadding="false"
-    android:paddingTop="14dp"
-    android:paddingBottom="130dp"
-    android:paddingHorizontal="20dp">
+    android:visibility="visible">
+
+    <ScrollView
+        android:id="@+id/scrollDashboard"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scrollbars="none"
+        android:clipToPadding="false"
+        android:paddingTop="14dp"
+        android:paddingBottom="84dp"
+        android:paddingHorizontal="20dp">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -291,11 +295,23 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Dodaj swój pierwszy profil korzystając z formularza poniżej."
+                android:text="Utwórz swój pierwszy kod QR i udostępnij go znajomym."
                 android:textColor="@color/text_secondary"
                 android:textSize="12sp"
                 android:gravity="center"
                 android:layout_marginTop="4dp" />
+
+            <Button
+                android:id="@+id/btnEmptyAddQr"
+                android:layout_width="wrap_content"
+                android:layout_height="42dp"
+                android:text="➕ Utwórz pierwszy kod QR"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:textColor="@color/white"
+                android:background="@drawable/btn_pill_dark"
+                android:paddingHorizontal="20dp"
+                android:layout_marginTop="14dp" />
         </LinearLayout>
 
         <!-- Guest Limit Banner -->
@@ -337,606 +353,30 @@
                 android:layout_marginTop="10dp" />
         </LinearLayout>
 
-        <!-- FAB-STYLE ADD QR BUTTON -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="center"
-            android:layout_marginTop="8dp"
-            android:layout_marginBottom="20dp">
-
-            <FrameLayout
-                android:id="@+id/fabAddQr"
-                android:layout_width="56dp"
-                android:layout_height="56dp"
-                android:background="@drawable/fab_add_bg"
-                android:elevation="6dp"
-                android:clickable="true"
-                android:focusable="true">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center"
-                    android:text="+"
-                    android:textSize="28sp"
-                    android:textStyle="bold"
-                    android:textColor="@color/white" />
-            </FrameLayout>
-        </LinearLayout>
-
-        <!-- Formularz tworzenia nowego kodu QR (rozwijany przyciskiem +) -->
-        <LinearLayout
-            android:id="@+id/formAddQr"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:visibility="gone">
-
-        <!-- Platform Selector Row (horizontally scrollable) -->
-        <HorizontalScrollView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:scrollbars="none">
-
-            <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal">
-
-                    <!-- Instagram -->
-                    <LinearLayout
-                        android:id="@+id/optPlatformInstagram"
-                        android:layout_width="wrap_content"
-                        android:layout_height="40dp"
-                        android:orientation="horizontal"
-                        android:gravity="center_vertical"
-                        android:background="@drawable/platform_item_selected"
-                        android:paddingHorizontal="10dp"
-                        android:layout_marginEnd="8dp">
-
-                        <FrameLayout
-                            android:layout_width="26dp"
-                            android:layout_height="26dp"
-                            android:background="@drawable/circle_icon_white_bg">
-
-                            <ImageView
-                                android:layout_width="15dp"
-                                android:layout_height="15dp"
-                                android:layout_gravity="center"
-                                android:src="@drawable/ic_instagram"
-                                android:contentDescription="Instagram" />
-                        </FrameLayout>
-
-                        <TextView
-                            android:id="@+id/tvLabelInstagram"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Instagram"
-                            android:textColor="@color/accent"
-                            android:textSize="12sp"
-                            android:textStyle="bold"
-                            android:layout_marginStart="8dp" />
-                    </LinearLayout>
-
-                    <!-- Facebook -->
-                    <LinearLayout
-                        android:id="@+id/optPlatformFacebook"
-                        android:layout_width="wrap_content"
-                        android:layout_height="40dp"
-                        android:orientation="horizontal"
-                        android:gravity="center_vertical"
-                        android:background="@drawable/platform_item_unselected"
-                        android:paddingHorizontal="10dp"
-                        android:layout_marginEnd="8dp">
-
-                        <FrameLayout
-                            android:layout_width="26dp"
-                            android:layout_height="26dp"
-                            android:background="@drawable/circle_icon_white_bg">
-
-                            <ImageView
-                                android:layout_width="15dp"
-                                android:layout_height="15dp"
-                                android:layout_gravity="center"
-                                android:src="@drawable/ic_facebook"
-                                android:contentDescription="Facebook" />
-                        </FrameLayout>
-
-                        <TextView
-                            android:id="@+id/tvLabelFacebook"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Facebook"
-                            android:textColor="#334155"
-                            android:textSize="12sp"
-                            android:layout_marginStart="8dp" />
-                    </LinearLayout>
-
-                    <!-- TikTok -->
-                    <LinearLayout
-                        android:id="@+id/optPlatformTikTok"
-                        android:layout_width="wrap_content"
-                        android:layout_height="40dp"
-                        android:orientation="horizontal"
-                        android:gravity="center_vertical"
-                        android:background="@drawable/platform_item_unselected"
-                        android:paddingHorizontal="10dp"
-                        android:layout_marginEnd="8dp">
-
-                        <FrameLayout
-                            android:layout_width="26dp"
-                            android:layout_height="26dp"
-                            android:background="@drawable/circle_icon_white_bg">
-
-                            <ImageView
-                                android:layout_width="15dp"
-                                android:layout_height="15dp"
-                                android:layout_gravity="center"
-                                android:src="@drawable/ic_tiktok"
-                                android:contentDescription="TikTok" />
-                        </FrameLayout>
-
-                        <TextView
-                            android:id="@+id/tvLabelTikTok"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="TikTok"
-                            android:textColor="#334155"
-                            android:textSize="12sp"
-                            android:layout_marginStart="8dp" />
-                    </LinearLayout>
-
-                    <!-- Snapchat -->
-                    <LinearLayout
-                        android:id="@+id/optPlatformSnapchat"
-                        android:layout_width="wrap_content"
-                        android:layout_height="40dp"
-                        android:orientation="horizontal"
-                        android:gravity="center_vertical"
-                        android:background="@drawable/platform_item_unselected"
-                        android:paddingHorizontal="10dp"
-                        android:layout_marginEnd="8dp">
-
-                        <FrameLayout
-                            android:layout_width="26dp"
-                            android:layout_height="26dp"
-                            android:background="@drawable/circle_icon_white_bg">
-
-                            <ImageView
-                                android:layout_width="15dp"
-                                android:layout_height="15dp"
-                                android:layout_gravity="center"
-                                android:src="@drawable/ic_snapchat"
-                                android:contentDescription="Snapchat" />
-                        </FrameLayout>
-
-                        <TextView
-                            android:id="@+id/tvLabelSnapchat"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Snapchat"
-                            android:textColor="#334155"
-                            android:textSize="12sp"
-                            android:layout_marginStart="8dp" />
-                    </LinearLayout>
-
-                    <!-- YouTube -->
-                    <LinearLayout
-                        android:id="@+id/optPlatformYouTube"
-                        android:layout_width="wrap_content"
-                        android:layout_height="40dp"
-                        android:orientation="horizontal"
-                        android:gravity="center_vertical"
-                        android:background="@drawable/platform_item_unselected"
-                        android:paddingHorizontal="10dp"
-                        android:layout_marginEnd="8dp">
-
-                        <FrameLayout
-                            android:layout_width="26dp"
-                            android:layout_height="26dp"
-                            android:background="@drawable/circle_icon_white_bg">
-
-                            <ImageView
-                                android:layout_width="15dp"
-                                android:layout_height="15dp"
-                                android:layout_gravity="center"
-                                android:src="@drawable/ic_youtube"
-                                android:contentDescription="YouTube" />
-                        </FrameLayout>
-
-                        <TextView
-                            android:id="@+id/tvLabelYouTube"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="YouTube"
-                            android:textColor="#334155"
-                            android:textSize="12sp"
-                            android:layout_marginStart="8dp" />
-                    </LinearLayout>
-
-                    <!-- LinkedIn -->
-                    <LinearLayout
-                        android:id="@+id/optPlatformLinkedIn"
-                        android:layout_width="wrap_content"
-                        android:layout_height="40dp"
-                        android:orientation="horizontal"
-                        android:gravity="center_vertical"
-                        android:background="@drawable/platform_item_unselected"
-                        android:paddingHorizontal="10dp"
-                        android:layout_marginEnd="8dp">
-
-                        <FrameLayout
-                            android:layout_width="26dp"
-                            android:layout_height="26dp"
-                            android:background="@drawable/circle_icon_white_bg">
-
-                            <ImageView
-                                android:layout_width="15dp"
-                                android:layout_height="15dp"
-                                android:layout_gravity="center"
-                                android:src="@drawable/ic_linkedin"
-                                android:contentDescription="LinkedIn" />
-                        </FrameLayout>
-
-                        <TextView
-                            android:id="@+id/tvLabelLinkedIn"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="LinkedIn"
-                            android:textColor="#334155"
-                            android:textSize="12sp"
-                            android:layout_marginStart="8dp" />
-                    </LinearLayout>
-
-                    <!-- Twitter / X -->
-                    <LinearLayout
-                        android:id="@+id/optPlatformTwitter"
-                        android:layout_width="wrap_content"
-                        android:layout_height="40dp"
-                        android:orientation="horizontal"
-                        android:gravity="center_vertical"
-                        android:background="@drawable/platform_item_unselected"
-                        android:paddingHorizontal="10dp"
-                        android:layout_marginEnd="8dp">
-
-                        <FrameLayout
-                            android:layout_width="26dp"
-                            android:layout_height="26dp"
-                            android:background="@drawable/circle_icon_white_bg">
-
-                            <ImageView
-                                android:layout_width="15dp"
-                                android:layout_height="15dp"
-                                android:layout_gravity="center"
-                                android:src="@drawable/ic_twitter_x"
-                                android:contentDescription="X" />
-                        </FrameLayout>
-
-                        <TextView
-                            android:id="@+id/tvLabelTwitter"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="X (Twitter)"
-                            android:textColor="#334155"
-                            android:textSize="12sp"
-                            android:layout_marginStart="8dp" />
-                    </LinearLayout>
-
-                    <!-- Discord -->
-                    <LinearLayout
-                        android:id="@+id/optPlatformDiscord"
-                        android:layout_width="wrap_content"
-                        android:layout_height="40dp"
-                        android:orientation="horizontal"
-                        android:gravity="center_vertical"
-                        android:background="@drawable/platform_item_unselected"
-                        android:paddingHorizontal="10dp"
-                        android:layout_marginEnd="8dp">
-
-                        <FrameLayout
-                            android:layout_width="26dp"
-                            android:layout_height="26dp"
-                            android:background="@drawable/circle_icon_white_bg">
-
-                            <ImageView
-                                android:layout_width="15dp"
-                                android:layout_height="15dp"
-                                android:layout_gravity="center"
-                                android:src="@drawable/ic_discord"
-                                android:contentDescription="Discord" />
-                        </FrameLayout>
-
-                        <TextView
-                            android:id="@+id/tvLabelDiscord"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Discord"
-                            android:textColor="#334155"
-                            android:textSize="12sp"
-                            android:layout_marginStart="8dp" />
-                    </LinearLayout>
-
-                    <!-- GitHub -->
-                    <LinearLayout
-                        android:id="@+id/optPlatformGitHub"
-                        android:layout_width="wrap_content"
-                        android:layout_height="40dp"
-                        android:orientation="horizontal"
-                        android:gravity="center_vertical"
-                        android:background="@drawable/platform_item_unselected"
-                        android:paddingHorizontal="10dp"
-                        android:layout_marginEnd="8dp">
-
-                        <FrameLayout
-                            android:layout_width="26dp"
-                            android:layout_height="26dp"
-                            android:background="@drawable/circle_icon_white_bg">
-
-                            <ImageView
-                                android:layout_width="15dp"
-                                android:layout_height="15dp"
-                                android:layout_gravity="center"
-                                android:src="@drawable/ic_github"
-                                android:contentDescription="GitHub" />
-                        </FrameLayout>
-
-                        <TextView
-                            android:id="@+id/tvLabelGitHub"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="GitHub"
-                            android:textColor="#334155"
-                            android:textSize="12sp"
-                            android:layout_marginStart="8dp" />
-                    </LinearLayout>
-
-                    <!-- Spotify -->
-                    <LinearLayout
-                        android:id="@+id/optPlatformSpotify"
-                        android:layout_width="wrap_content"
-                        android:layout_height="40dp"
-                        android:orientation="horizontal"
-                        android:gravity="center_vertical"
-                        android:background="@drawable/platform_item_unselected"
-                        android:paddingHorizontal="10dp"
-                        android:layout_marginEnd="8dp">
-
-                        <FrameLayout
-                            android:layout_width="26dp"
-                            android:layout_height="26dp"
-                            android:background="@drawable/circle_icon_white_bg">
-
-                            <ImageView
-                                android:layout_width="15dp"
-                                android:layout_height="15dp"
-                                android:layout_gravity="center"
-                                android:src="@drawable/ic_spotify"
-                                android:contentDescription="Spotify" />
-                        </FrameLayout>
-
-                        <TextView
-                            android:id="@+id/tvLabelSpotify"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Spotify"
-                            android:textColor="#334155"
-                            android:textSize="12sp"
-                            android:layout_marginStart="8dp" />
-                    </LinearLayout>
-
-                    <!-- Custom / Web -->
-                    <LinearLayout
-                        android:id="@+id/optPlatformWeb"
-                        android:layout_width="wrap_content"
-                        android:layout_height="40dp"
-                        android:orientation="horizontal"
-                        android:gravity="center_vertical"
-                        android:background="@drawable/platform_item_unselected"
-                        android:paddingHorizontal="10dp">
-
-                        <FrameLayout
-                            android:layout_width="26dp"
-                            android:layout_height="26dp"
-                            android:background="@drawable/circle_icon_white_bg">
-
-                            <ImageView
-                                android:layout_width="15dp"
-                                android:layout_height="15dp"
-                                android:layout_gravity="center"
-                                android:src="@drawable/ic_globe"
-                                android:contentDescription="WWW" />
-                        </FrameLayout>
-
-                        <TextView
-                            android:id="@+id/tvLabelWeb"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Strona WWW"
-                            android:textColor="#334155"
-                            android:textSize="12sp"
-                            android:layout_marginStart="8dp" />
-                    </LinearLayout>
-
-                </LinearLayout>
-            </HorizontalScrollView>
-
-
-                <!-- Input 1: Name with Label -->
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="ETYKIETA / NAZWA PROFILU"
-                android:textSize="11sp"
-                android:textStyle="bold"
-                android:textColor="@color/text_secondary"
-                android:layout_marginBottom="6dp" />
-
-            <EditText
-                android:id="@+id/etNewQrName"
-                android:layout_width="match_parent"
-                android:layout_height="48dp"
-                android:hint="np. Instagram @twoj_nick lub Mój Sklep"
-                android:inputType="textCapWords"
-                android:background="@drawable/search_bar_bg"
-                android:paddingHorizontal="16dp"
-                android:textColor="@color/text_primary"
-                android:textColorHint="@color/text_secondary"
-                android:textSize="13sp"
-                android:layout_marginBottom="14dp" />
-
-            <!-- Input 2: URL with Label -->
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="NICK LUB LINK PROFILU"
-                android:textSize="11sp"
-                android:textStyle="bold"
-                android:textColor="@color/text_secondary"
-                android:layout_marginBottom="6dp" />
-
-            <EditText
-                android:id="@+id/etNewQrUrl"
-                android:layout_width="match_parent"
-                android:layout_height="48dp"
-                android:hint="np. @twoj_nick lub link..."
-                android:inputType="textUri"
-                android:background="@drawable/search_bar_bg"
-                android:paddingHorizontal="16dp"
-                android:textColor="@color/text_primary"
-                android:textColorHint="@color/text_secondary"
-                android:textSize="13sp"
-                android:layout_marginBottom="14dp" />
-
-            <!-- QR Code Color Selector (All Unlocked) -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:layout_marginBottom="8dp">
-
-                <TextView
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="KOLOR KODU QR"
-                    android:textSize="11sp"
-                    android:textStyle="bold"
-                    android:textColor="@color/text_secondary" />
-
-                <TextView
-                    android:id="@+id/badgeColorPro"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:visibility="gone" />
-            </LinearLayout>
-
-            <HorizontalScrollView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:scrollbars="none"
-                android:layout_marginBottom="18dp">
-
-                <LinearLayout
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical">
-
-                    <!-- Obsidian (#0F172A) - Free default -->
-                    <FrameLayout
-                        android:id="@+id/btnColorObsidian"
-                        android:layout_width="44dp"
-                        android:layout_height="44dp"
-                        android:background="@drawable/qr_color_ring_selected"
-                        android:clickable="true"
-                        android:focusable="true"
-                        android:layout_marginEnd="10dp">
-                        <View
-                            android:layout_width="32dp"
-                            android:layout_height="32dp"
-                            android:layout_gravity="center"
-                            android:background="@drawable/dot_color_obsidian" />
-                    </FrameLayout>
-
-                    <!-- Royal Blue (#2563EB) -->
-                    <FrameLayout
-                        android:id="@+id/btnColorBlue"
-                        android:layout_width="44dp"
-                        android:layout_height="44dp"
-                        android:background="@drawable/qr_color_ring_unselected"
-                        android:clickable="true"
-                        android:focusable="true"
-                        android:layout_marginEnd="10dp">
-                        <View
-                            android:layout_width="32dp"
-                            android:layout_height="32dp"
-                            android:layout_gravity="center"
-                            android:background="@drawable/dot_color_blue" />
-                    </FrameLayout>
-
-                    <!-- Luxury Gold (#D97706) -->
-                    <FrameLayout
-                        android:id="@+id/btnColorGold"
-                        android:layout_width="44dp"
-                        android:layout_height="44dp"
-                        android:background="@drawable/qr_color_ring_unselected"
-                        android:clickable="true"
-                        android:focusable="true"
-                        android:layout_marginEnd="10dp">
-                        <View
-                            android:layout_width="32dp"
-                            android:layout_height="32dp"
-                            android:layout_gravity="center"
-                            android:background="@drawable/dot_color_gold" />
-                    </FrameLayout>
-
-                    <!-- Emerald Green (#059669) -->
-                    <FrameLayout
-                        android:id="@+id/btnColorEmerald"
-                        android:layout_width="44dp"
-                        android:layout_height="44dp"
-                        android:background="@drawable/qr_color_ring_unselected"
-                        android:clickable="true"
-                        android:focusable="true"
-                        android:layout_marginEnd="10dp">
-                        <View
-                            android:layout_width="32dp"
-                            android:layout_height="32dp"
-                            android:layout_gravity="center"
-                            android:background="@drawable/dot_color_emerald" />
-                    </FrameLayout>
-
-                    <!-- Cyber Violet (#7C3AED) -->
-                    <FrameLayout
-                        android:id="@+id/btnColorViolet"
-                        android:layout_width="44dp"
-                        android:layout_height="44dp"
-                        android:background="@drawable/qr_color_ring_unselected"
-                        android:clickable="true"
-                        android:focusable="true">
-                        <View
-                            android:layout_width="32dp"
-                            android:layout_height="32dp"
-                            android:layout_gravity="center"
-                            android:background="@drawable/dot_color_violet" />
-                    </FrameLayout>
-
-                </LinearLayout>
-            </HorizontalScrollView>
-
-            <!-- Create Button -->
-            <Button
-                android:id="@+id/btnCreateNewQr"
-                android:layout_width="match_parent"
-                android:layout_height="50dp"
-                android:text="✨ Wygeneruj i zapisz kod QR"
-                android:textSize="13sp"
-                android:textStyle="bold"
-                android:background="@drawable/btn_pill_dark"
-                android:textColor="@color/white" />
-        </LinearLayout>
-
     </LinearLayout>
-</ScrollView>
+    </ScrollView>
+
+    <!-- Floating Action Button: unosi się na stałe nad dockiem w prawym dolnym rogu -->
+    <FrameLayout
+        android:id="@+id/fabAddQr"
+        android:layout_width="56dp"
+        android:layout_height="56dp"
+        android:layout_gravity="bottom|end"
+        android:layout_marginEnd="20dp"
+        android:layout_marginBottom="16dp"
+        android:background="@drawable/fab_add_bg"
+        android:elevation="8dp"
+        android:clickable="true"
+        android:focusable="true">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:text="+"
+            android:textSize="28sp"
+            android:textStyle="bold"
+            android:textColor="@color/white" />
+    </FrameLayout>
+
+</FrameLayout>

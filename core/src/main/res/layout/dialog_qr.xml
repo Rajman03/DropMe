@@ -194,7 +194,7 @@
             android:layout_height="34dp"
             android:orientation="horizontal"
             android:gravity="center"
-            android:background="@drawable/badge_status_ok"
+            android:background="@drawable/badge_status_ok_light"
             android:paddingHorizontal="12dp">
 
             <TextView
@@ -203,7 +203,7 @@
                 android:text="Status: OK"
                 android:textSize="11sp"
                 android:textStyle="bold"
-                android:textColor="@color/income_green" />
+                android:textColor="#047857" />
         </LinearLayout>
     </LinearLayout>
 

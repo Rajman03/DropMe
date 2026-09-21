@@ -15,6 +15,7 @@ public class SupabaseConfig {
 
     public static final String TABLE_USERS = "profiles";
     public static final String TABLE_PURCHASES = "app_purchases";
+    public static final String TABLE_QR_CODES = "user_qr_codes";
 
     private final SharedPreferences prefs;
 
@@ -44,5 +45,13 @@ public class SupabaseConfig {
             base = base.substring(0, base.length() - 1);
         }
         return base + "/rest/v1/" + table;
+    }
+
+    public String getAuthEndpoint(String path) {
+        String base = getProjectUrl();
+        if (base.endsWith("/")) {
+            base = base.substring(0, base.length() - 1);
+        }
+        return base + "/auth/v1/" + path;
     }
 }

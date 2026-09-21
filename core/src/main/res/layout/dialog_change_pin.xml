@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@drawable/card_bg"
+    android:padding="20dp"
+    android:gravity="center_horizontal">
+
+    <TextView
+        android:layout_width="44dp"
+        android:layout_height="44dp"
+        android:background="@drawable/circle_action_btn_light"
+        android:gravity="center"
+        android:text="🔑"
+        android:textSize="22sp"
+        android:layout_marginBottom="10dp" />
+
+    <TextView
+        android:id="@+id/tvChangePinTitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Zmień kod PIN"
+        android:textSize="17sp"
+        android:textStyle="bold"
+        android:textColor="@color/text_primary"
+        android:gravity="center"
+        android:layout_marginBottom="4dp" />
+
+    <TextView
+        android:id="@+id/tvChangePinSubtitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Wprowadź nowy 4-cyfrowy kod PIN"
+        android:textSize="12sp"
+        android:textColor="@color/text_secondary"
+        android:gravity="center"
+        android:layout_marginBottom="16dp" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Nowy PIN"
+        android:textSize="11sp"
+        android:textStyle="bold"
+        android:textColor="@color/text_secondary"
+        android:layout_marginBottom="4dp" />
+
+    <EditText
+        android:id="@+id/etNewPinInput"
+        android:layout_width="match_parent"
+        android:layout_height="46dp"
+        android:hint="••••"
+        android:inputType="numberPassword"
+        android:maxLength="4"
+        android:textSize="20sp"
+        android:gravity="center"
+        android:letterSpacing="0.25"
+        android:background="@drawable/search_bar_bg"
+        android:textColor="@color/text_primary"
+        android:textColorHint="@color/text_secondary"
+        android:paddingHorizontal="16dp"
+        android:layout_marginBottom="12dp" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Powtórz nowy PIN"
+        android:textSize="11sp"
+        android:textStyle="bold"
+        android:textColor="@color/text_secondary"
+        android:layout_marginBottom="4dp" />
+
+    <EditText
+        android:id="@+id/etConfirmPinInput"
+        android:layout_width="match_parent"
+        android:layout_height="46dp"
+        android:hint="••••"
+        android:inputType="numberPassword"
+        android:maxLength="4"
+        android:textSize="20sp"
+        android:gravity="center"
+        android:letterSpacing="0.25"
+        android:background="@drawable/search_bar_bg"
+        android:textColor="@color/text_primary"
+        android:textColorHint="@color/text_secondary"
+        android:paddingHorizontal="16dp"
+        android:layout_marginBottom="18dp" />
+
+    <!-- Action Buttons -->
+    <Button
+        android:id="@+id/btnSaveNewPin"
+        android:layout_width="match_parent"
+        android:layout_height="44dp"
+        android:text="Zapisz nowy PIN"
+        android:textSize="13sp"
+        android:textStyle="bold"
+        android:textColor="@color/white"
+        android:background="@drawable/btn_pill_dark"
+        android:layout_marginBottom="8dp" />
+
+    <Button
+        android:id="@+id/btnCancelNewPin"
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:text="Anuluj"
+        android:textSize="13sp"
+        android:textColor="@color/text_secondary"
+        android:background="@drawable/btn_pill_light" />
+
+</LinearLayout>

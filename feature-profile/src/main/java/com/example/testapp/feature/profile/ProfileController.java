@@ -3,6 +3,7 @@ package com.example.testapp.feature.profile;
 import com.example.testapp.core.SupabaseSqlFix;
 import com.example.testapp.data.AuthManager;
 import com.example.testapp.core.AuthUser;
+import com.example.testapp.core.PinSecurityManager;
 import com.example.testapp.core.PrivacyPolicyDialog;
 import com.example.testapp.data.SupabaseClient;
 import com.example.testapp.core.UserProfile;
@@ -20,6 +21,8 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -54,10 +57,14 @@ public class ProfileController {
     private TextView tvManagementHeaderTitle;
     private TextView tvManagementDesc;
     private Button btnOpenUserManagement;
+    private Button btnChangeAdminPin;
 
     private TextView tvAccountUsername;
     private TextView tvAccountCloudStatus;
     private Button btnLogOut;
+    private Button btnChangePassword;
+    private Button btnChangeEmail;
+    private Button btnDeleteAccount;
     private Button btnProfilePrivacyPolicy;
 
     public ProfileController(Activity activity, UserProfile userProfile, AuthManager authManager, ProfileActionCallback listener) {
@@ -90,10 +97,14 @@ public class ProfileController {
         tvManagementHeaderTitle = activity.findViewById(R.id.tvManagementHeaderTitle);
         tvManagementDesc = activity.findViewById(R.id.tvManagementDesc);
         btnOpenUserManagement = activity.findViewById(R.id.btnOpenUserManagement);
+        btnChangeAdminPin = activity.findViewById(R.id.btnChangeAdminPin);
 
         tvAccountUsername = activity.findViewById(R.id.tvAccountUsername);
         tvAccountCloudStatus = activity.findViewById(R.id.tvAccountCloudStatus);
         btnLogOut = activity.findViewById(R.id.btnLogOut);
+        btnChangePassword = activity.findViewById(R.id.btnChangePassword);
+        btnChangeEmail = activity.findViewById(R.id.btnChangeEmail);
+        btnDeleteAccount = activity.findViewById(R.id.btnDeleteAccount);
         btnProfilePrivacyPolicy = activity.findViewById(R.id.btnProfilePrivacyPolicy);
     }
 
@@ -117,7 +128,7 @@ public class ProfileController {
                     refreshViews();
                     if (listener != null) listener.onProfileUpdated();
                     if (SupabaseClient.isLastSyncSuccess()) {
-                        Toast.makeText(activity, "✓ Pomyślnie zsynchronizowano profil z Supabase!", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(activity, "Pomyślnie zsynchronizowano profil z Supabase!", Toast.LENGTH_SHORT).show();
                     } else {
                         Toast.makeText(activity, "Konto zapisane na urządzeniu. Dotknij informacji o chmurze, aby połączyć Supabase.", Toast.LENGTH_SHORT).show();
                     }
@@ -134,8 +145,50 @@ public class ProfileController {
             });
         }
 
+        if (btnChangeAdminPin != null) {
+            btnChangeAdminPin.setOnClickListener(v -> {
+                boolean hasAdminPrivilege = userProfile.isCreator() || userProfile.isAdmin()
+                        || (authManager != null && authManager.getCurrentUser() != null && (authManager.getCurrentUser().isAdmin() || authManager.getCurrentUser().isCreator()));
+                if (!hasAdminPrivilege) {
+                    Toast.makeText(activity, "Opcja zmiany PIN jest dostępna wyłącznie dla rangi Administrator lub Twórca!", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                AuthUser currentUser = authManager != null ? authManager.getCurrentUser() : null;
+                PinSecurityManager.promptFullPinChangeFlow(activity, currentUser, newPin -> {
+                    if (userProfile.isCreator()) {
+                        PinSecurityManager.setCreatorPin(activity, newPin);
+                    }
+                    if (userProfile.isAdmin()) {
+                        PinSecurityManager.setAdminPin(activity, newPin);
+                    }
+
+                    if (currentUser != null) {
+                        String[] err = new String[1];
+                        authManager.updateUserPin(currentUser.getUsername(), newPin, currentUser, err);
+                    }
+
+                    Toast.makeText(activity, "Kod PIN został pomyślnie zmieniony!", Toast.LENGTH_SHORT).show();
+                    refreshViews();
+                    if (listener != null) listener.onProfileUpdated();
+                });
+            });
+        }
+
         if (btnLogOut != null) {
             btnLogOut.setOnClickListener(v -> showLogoutDialog());
+        }
+
+        if (btnChangePassword != null) {
+            btnChangePassword.setOnClickListener(v -> showChangePasswordDialog());
+        }
+
+        if (btnChangeEmail != null) {
+            btnChangeEmail.setOnClickListener(v -> showChangeEmailDialog());
+        }
+
+        if (btnDeleteAccount != null) {
+            btnDeleteAccount.setOnClickListener(v -> showDeleteAccountDialog());
         }
 
         if (btnProfilePrivacyPolicy != null) {
@@ -151,18 +204,347 @@ public class ProfileController {
         }
     }
 
+    /** Walidacja inline widoczna w dialogu zamiast znikających Toastów. */
+    private void showFieldError(TextView target, String message) {
+        if (target == null) return;
+        target.setText(message);
+        target.setTextColor(activity.getColor(R.color.expense_red));
+        target.setVisibility(View.VISIBLE);
+    }
+
+    /** Usuń Konto: dostępne dla każdej zalogowanej rangi poza chronionym kontem Creatora. */
+    private boolean canDeleteOwnAccount() {
+        AuthUser current = (authManager != null) ? authManager.getCurrentUser() : null;
+        return current != null && !current.isCreator() && !userProfile.isCreator();
+    }
+
+    private void showChangePasswordDialog() {
+        AuthUser current = (authManager != null) ? authManager.getCurrentUser() : null;
+        if (current == null) {
+            Toast.makeText(activity, "Nie jesteś zalogowany", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        if (current.isGuest()) {
+            Toast.makeText(activity, "Konto gościa nie posiada hasła. Zarejestruj się!", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        // Admin/Creator: najpierw weryfikacja kodu PIN, potem dialog zmiany hasła
+        SensitiveActionGuard.guard(activity, authManager, current, "zmiana hasła", () ->
+                showChangePasswordDialogInner(current));
+    }
+
+    private void showChangePasswordDialogInner(AuthUser current) {
+        Dialog dialog = new Dialog(activity);
+        View dialogView = LayoutInflater.from(activity).inflate(R.layout.dialog_change_password, null, false);
+        dialog.setContentView(dialogView);
+
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+            int width = (int) (activity.getResources().getDisplayMetrics().widthPixels * 0.90);
+            dialog.getWindow().setLayout(width, ViewGroup.LayoutParams.WRAP_CONTENT);
+        }
+
+        TextView tvSubtitle = dialogView.findViewById(R.id.tvChangePasswordSubtitle);
+        EditText etCurrentPass = dialogView.findViewById(R.id.etCurrentPassword);
+        EditText etNewPass = dialogView.findViewById(R.id.etNewPassword);
+        EditText etConfirmPass = dialogView.findViewById(R.id.etConfirmPassword);
+        TextView tvMessage = dialogView.findViewById(R.id.tvPasswordMessage);
+        Button btnSubmit = dialogView.findViewById(R.id.btnSubmitChangePassword);
+        Button btnCancel = dialogView.findViewById(R.id.btnCancelChangePassword);
+
+        if (tvSubtitle != null) {
+            tvSubtitle.setText("Użytkownik: @" + current.getUsername());
+        }
+
+        if (btnCancel != null) {
+            btnCancel.setOnClickListener(v -> dialog.dismiss());
+        }
+
+        if (btnSubmit == null || etCurrentPass == null || etNewPass == null || etConfirmPass == null) {
+            return;
+        }
+
+        btnSubmit.setOnClickListener(v -> {
+            String curPass = etCurrentPass.getText().toString();
+            String newPass = etNewPass.getText().toString();
+            String confPass = etConfirmPass.getText().toString();
+
+            if (curPass.trim().isEmpty()) {
+                showFieldError(tvMessage, "Wpisz aktualne hasło");
+                return;
+            }
+            if (!current.verifyPassword(curPass)) {
+                showFieldError(tvMessage, "Aktualne hasło jest niepoprawne!");
+                return;
+            }
+            if (newPass.length() < 6) {
+                showFieldError(tvMessage, "Nowe hasło musi mieć co najmniej 6 znaków!");
+                return;
+            }
+            if (newPass.equals(curPass)) {
+                showFieldError(tvMessage, "Nowe hasło musi różnić się od aktualnego!");
+                return;
+            }
+            if (!newPass.equals(confPass)) {
+                showFieldError(tvMessage, "Nowe hasła nie są identyczne!");
+                return;
+            }
+
+            btnSubmit.setEnabled(false);
+            btnSubmit.setText("Zapisywanie...");
+            tvMessage.setVisibility(View.GONE);
+
+            String[] err = new String[1];
+            if (authManager.updateCurrentUserPassword(newPass, err)) {
+                dialog.dismiss();
+                Toast.makeText(activity, "Twoje hasło zostało pomyślnie zmienione!", Toast.LENGTH_SHORT).show();
+            } else {
+                btnSubmit.setEnabled(true);
+                btnSubmit.setText("Zmień hasło");
+                showFieldError(tvMessage, err[0] != null ? err[0] : "Błąd zmiany hasła");
+            }
+        });
+
+        dialog.show();
+    }
+
+    /**
+     * Zmiana e-maila w 2 krokach z podwójną weryfikacją:
+     * 1. Użytkownik podaje nowy adres -> wysyłamy kod OTP na STARY i NOWY adres.
+     * 2. Użytkownik wpisuje OBA kody -> po weryfikacji obu zapisujemy nowy adres.
+     */
+    private void showChangeEmailDialog() {
+        AuthUser current = (authManager != null) ? authManager.getCurrentUser() : null;
+        if (current == null) {
+            Toast.makeText(activity, "Nie jesteś zalogowany", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        if (current.isGuest()) {
+            Toast.makeText(activity, "Konto gościa nie posiada adresu e-mail. Zarejestruj się!", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        // Admin/Creator: najpierw weryfikacja kodu PIN, potem dialog zmiany e-maila
+        SensitiveActionGuard.guard(activity, authManager, current, "zmiana e-maila", () ->
+                showChangeEmailDialogInner(current, oldEmailGetter(current)));
+    }
+
+    private String oldEmailGetter(AuthUser current) {
+        String email = current.getEmail();
+        return (email != null && !email.trim().isEmpty()) ? email.trim().toLowerCase() : "";
+    }
+
+    private void showChangeEmailDialogInner(AuthUser current, String oldEmail) {
+        Dialog dialog = new Dialog(activity);
+        View dialogView = LayoutInflater.from(activity).inflate(R.layout.dialog_change_email, null, false);
+        dialog.setContentView(dialogView);
+
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+            int width = (int) (activity.getResources().getDisplayMetrics().widthPixels * 0.90);
+            dialog.getWindow().setLayout(width, ViewGroup.LayoutParams.WRAP_CONTENT);
+        }
+
+        LinearLayout groupStep1 = dialogView.findViewById(R.id.groupChangeEmailStep1);
+        LinearLayout groupStep2 = dialogView.findViewById(R.id.groupChangeEmailStep2);
+        TextView tvCurrentEmail = dialogView.findViewById(R.id.tvChangeEmailCurrent);
+        TextView tvCodeInfo = dialogView.findViewById(R.id.tvChangeEmailCodeInfo);
+        TextView tvMessage = dialogView.findViewById(R.id.tvChangeEmailMessage);
+        EditText etNewEmail = dialogView.findViewById(R.id.etNewEmail);
+        EditText etCodeOld = dialogView.findViewById(R.id.etChangeEmailCode);
+        EditText etCodeNew = dialogView.findViewById(R.id.etChangeEmailCodeNew);
+        Button btnSubmit = dialogView.findViewById(R.id.btnSubmitChangeEmail);
+        Button btnCancel = dialogView.findViewById(R.id.btnCancelChangeEmail);
+
+        if (oldEmail == null || oldEmail.isEmpty()) {
+            Toast.makeText(activity, "Twoje konto nie ma zapisanego adresu e-mail. Skontaktuj się z Twórcą.", Toast.LENGTH_LONG).show();
+            return;
+        }
+
+        if (tvCurrentEmail != null) {
+            tvCurrentEmail.setText("Aktualny e-mail: " + oldEmail);
+        }
+
+        final boolean[] stepTwo = {false};
+        final String[] pendingNewEmail = {null};
+        final long[] codeCreatedAt = {0};
+
+        if (btnCancel != null) {
+            btnCancel.setOnClickListener(v -> dialog.dismiss());
+        }
+
+        if (btnSubmit == null || etNewEmail == null || etCodeOld == null || etCodeNew == null) {
+            return;
+        }
+
+        btnSubmit.setOnClickListener(v -> {
+            if (!stepTwo[0]) {
+                // KROK 1: walidacja + wysyłka kodów na STARY i NOWY adres
+                String[] err = new String[1];
+                String cleanEmail = authManager.validateNewEmail(etNewEmail.getText().toString(), err);
+                if (cleanEmail == null) {
+                    showFieldError(tvMessage, err[0] != null ? err[0] : "Nieprawidłowy adres e-mail");
+                    return;
+                }
+
+                btnSubmit.setEnabled(false);
+                btnSubmit.setText("Wysyłanie kodów...");
+                tvMessage.setVisibility(View.GONE);
+
+                // Najpierw NOWY adres (OSA w Supabase wymaga odstępu między wysyłkami)
+                authManager.sendEmailOtp(cleanEmail, new SupabaseClient.Callback<Boolean>() {
+                    @Override
+                    public void onSuccess(Boolean result) {
+                        // Potem STARY adres
+                        authManager.sendEmailOtp(oldEmail, new SupabaseClient.Callback<Boolean>() {
+                            @Override
+                            public void onSuccess(Boolean r2) {
+                                stepTwo[0] = true;
+                                pendingNewEmail[0] = cleanEmail;
+                                codeCreatedAt[0] = System.currentTimeMillis();
+
+                                if (groupStep1 != null) groupStep1.setVisibility(View.GONE);
+                                if (groupStep2 != null) groupStep2.setVisibility(View.VISIBLE);
+                                if (tvCodeInfo != null) {
+                                    tvCodeInfo.setText("Wysłaliśmy 6-cyfrowe kody na OBA adresy:\n"
+                                            + oldEmail + "\n" + cleanEmail);
+                                }
+                                btnSubmit.setEnabled(true);
+                                btnSubmit.setText("Potwierdź i zapisz nowy e-mail");
+                                Toast.makeText(activity, "Kody weryfikacyjne wysłano na oba adresy", Toast.LENGTH_LONG).show();
+                            }
+
+                            @Override
+                            public void onError(String error) {
+                                btnSubmit.setEnabled(true);
+                                btnSubmit.setText("Wyślij kod weryfikacyjny");
+                                Toast.makeText(activity, error != null ? error : "Nie udało się wysłać kodu na stary adres", Toast.LENGTH_LONG).show();
+                            }
+                        });
+                    }
+
+                    @Override
+                    public void onError(String error) {
+                        btnSubmit.setEnabled(true);
+                        btnSubmit.setText("Wyślij kod weryfikacyjny");
+                        Toast.makeText(activity, error != null ? error : "Nie udało się wysłać kodu na nowy adres", Toast.LENGTH_LONG).show();
+                    }
+                });
+            } else {
+                // KROK 2: weryfikacja OBU kodów + zapis nowego adresu
+                if (System.currentTimeMillis() - codeCreatedAt[0] > 10 * 60 * 1000) {
+                    Toast.makeText(activity, "Kody wygasły (ważne 10 minut). Zacznij od nowa.", Toast.LENGTH_LONG).show();
+                    dialog.dismiss();
+                    return;
+                }
+
+                String enteredOld = etCodeOld.getText().toString().trim();
+                String enteredNew = etCodeNew.getText().toString().trim();
+                if (enteredOld.length() != 6 || enteredNew.length() != 6) {
+                    showFieldError(tvMessage, "Wpisz oba 6-cyfrowe kody");
+                    return;
+                }
+
+                btnSubmit.setEnabled(false);
+                btnSubmit.setText("Weryfikacja kodów...");
+                tvMessage.setVisibility(View.GONE);
+
+                // Najpierw kod ze STAREGO adresu (potwierdzenie własności)
+                authManager.verifyEmailOtp(oldEmail, enteredOld, new SupabaseClient.Callback<Boolean>() {
+                    @Override
+                    public void onSuccess(Boolean ok) {
+                        // Potem kod z NOWEGO adresu (potwierdzenie własności nowej skrzynki)
+                        authManager.verifyEmailOtp(pendingNewEmail[0], enteredNew, new SupabaseClient.Callback<Boolean>() {
+                            @Override
+                            public void onSuccess(Boolean ok2) {
+                                String[] err = new String[1];
+                                if (authManager.applyEmailChange(pendingNewEmail[0], err)) {
+                                    dialog.dismiss();
+                                    refreshViews();
+                                    Toast.makeText(activity, "Nowy adres e-mail został zapisany!", Toast.LENGTH_LONG).show();
+                                } else {
+                                    btnSubmit.setEnabled(true);
+                                    btnSubmit.setText("Potwierdź i zapisz nowy e-mail");
+                                    showFieldError(tvMessage, err[0] != null ? err[0] : "Błąd zapisu e-maila");
+                                }
+                            }
+
+                            @Override
+                            public void onError(String error) {
+                                btnSubmit.setEnabled(true);
+                                btnSubmit.setText("Potwierdź i zapisz nowy e-mail");
+                                showFieldError(tvMessage, "Nowy e-mail: " + (error != null ? error : "nieprawidłowy lub wygasły kod"));
+                            }
+                        });
+                    }
+
+                    @Override
+                    public void onError(String error) {
+                        btnSubmit.setEnabled(true);
+                        btnSubmit.setText("Potwierdź i zapisz nowy e-mail");
+                        showFieldError(tvMessage, "Stary e-mail: " + (error != null ? error : "nieprawidłowy lub wygasły kod"));
+                    }
+                });
+            }
+        });
+
+        dialog.show();
+    }
+
+    private void showDeleteAccountDialog() {
+        AuthUser current = (authManager != null) ? authManager.getCurrentUser() : null;
+        if (current == null) {
+            Toast.makeText(activity, "Nie jesteś zalogowany", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        // Konto Creatora jest chronione systemowo - pozostałe rangi (także Admin) mogą się usunąć.
+        if (current.isCreator() || userProfile.isCreator()) {
+            new AlertDialog.Builder(activity)
+                    .setTitle("Ochrona konta Twórcy")
+                    .setMessage("Konto Głównego Twórcy (Creator) nie może zostać usunięte z poziomu aplikacji.")
+                    .setPositiveButton("ROZUMIEM", null)
+                    .show();
+            return;
+        }
+
+        // Admin potwierdza operację własnym kodem PIN (z jednorazowym ustawieniem PIN-u, jeśli go brak).
+        SensitiveActionGuard.guard(activity, authManager, current, "usunięcie konta", () ->
+                confirmDeleteAccount(current));
+    }
+
+    private void confirmDeleteAccount(AuthUser current) {
+        new AlertDialog.Builder(activity)
+                .setTitle("Trwałe usunięcie konta")
+                .setMessage("Czy na pewno chcesz bezpowrotnie usunąć konto @" + current.getUsername() + "?\n\nTwoje dane i profil zostaną bezpowrotnie usunięte z bazy danych.")
+                .setPositiveButton("USUŃ KONTO", (dialog, which) -> {
+                    String[] err = new String[1];
+                    if (authManager.deleteSelfAccount(userProfile, err)) {
+                        Toast.makeText(activity, "Twoje konto zostało pomyślnie usunięte", Toast.LENGTH_LONG).show();
+                        if (listener != null) listener.onLogoutRequested();
+                    } else {
+                        Toast.makeText(activity, err[0] != null ? err[0] : "Błąd usuwania konta", Toast.LENGTH_LONG).show();
+                    }
+                })
+                .setNegativeButton("ANULUJ", null)
+                .show();
+    }
+
     private void showSupabaseSqlDialog() {
         new AlertDialog.Builder(activity)
-                .setTitle("🛠️ Synchronizacja z Supabase")
+                .setTitle("Synchronizacja z Supabase")
                 .setMessage("Twoje konto działa poprawnie i jest zapisane na Twoim telefonie.\n\nAby włączyć kopię zapasową w chmurze Supabase:\n\n1. Wejdź na panel Supabase -> SQL Editor\n2. Kliknij poniższy przycisk, aby skopiować gotowy kod SQL\n3. Wklej kod i kliknij zielony przycisk 'Run'")
-                .setPositiveButton("📋 KOPIUJ KOD SQL", (dialog, which) -> {
+                .setPositiveButton("KOPIUJ KOD SQL", (dialog, which) -> {
                     String sql = SupabaseSqlFix.SQL;
 
                     ClipboardManager clipboard = (ClipboardManager) activity.getSystemService(Context.CLIPBOARD_SERVICE);
                     ClipData clip = ClipData.newPlainText("Supabase Fix SQL", sql);
                     if (clipboard != null) {
                         clipboard.setPrimaryClip(clip);
-                        Toast.makeText(activity, "✓ Skopiowano kod SQL do schowka! Wklej go w Supabase SQL Editor.", Toast.LENGTH_LONG).show();
+                        Toast.makeText(activity, "Skopiowano kod SQL do schowka! Wklej go w Supabase SQL Editor.", Toast.LENGTH_LONG).show();
                     }
                 })
                 .setNegativeButton("ZAMKNIJ", null)
@@ -197,9 +579,8 @@ public class ProfileController {
         dialog.show();
     }
 
-    public void refreshViews() {
-        String displayName;
-        String username;
+    public void refreshViews() {            String displayName;
+            String username;
         boolean loggedIn = (authManager != null && authManager.getCurrentUser() != null);
 
         if (loggedIn) {
@@ -216,10 +597,10 @@ public class ProfileController {
             username = "";
         }
 
-        // Clean user avatar
-        final String defaultAvatar = "👤";
-        if (tvHeaderAvatar != null) tvHeaderAvatar.setText(defaultAvatar);
-        if (tvProfileAvatarLarge != null) tvProfileAvatarLarge.setText(defaultAvatar);
+        // Awatar z pierwszą literą nazwy (zamiast emoji)
+        String avatarLetter = displayName.trim().isEmpty() ? "U" : displayName.trim().substring(0, 1).toUpperCase();
+        if (tvHeaderAvatar != null) tvHeaderAvatar.setText(avatarLetter);
+        if (tvProfileAvatarLarge != null) tvProfileAvatarLarge.setText(avatarLetter);
         if (tvProfileDisplayName != null) tvProfileDisplayName.setText(displayName);
 
         if (tvProfileHandle != null) {
@@ -240,20 +621,20 @@ public class ProfileController {
 
         if (tvAccountCloudStatus != null) {
             if (SupabaseClient.isLastSyncSuccess()) {
-                tvAccountCloudStatus.setText("Aktywna ✓");
+                tvAccountCloudStatus.setText("Aktywna");
                 tvAccountCloudStatus.setTextColor(Color.parseColor("#059669"));
             } else {
-                tvAccountCloudStatus.setText("Lokalna (dotknij aby połączyć) ℹ️");
+                tvAccountCloudStatus.setText("Lokalna (dotknij aby połączyć)");
                 tvAccountCloudStatus.setTextColor(Color.parseColor("#3B82F6"));
             }
         }
 
         if (tvProfileSyncStatus != null) {
             if (SupabaseClient.isLastSyncSuccess()) {
-                tvProfileSyncStatus.setText("Zsynchronizowano z chmurą ✓");
+                tvProfileSyncStatus.setText("Zsynchronizowano z chmurą");
                 tvProfileSyncStatus.setTextColor(Color.parseColor("#059669"));
             } else {
-                tvProfileSyncStatus.setText("Zapisano na urządzeniu ✓");
+                tvProfileSyncStatus.setText("Zapisano na urządzeniu");
                 tvProfileSyncStatus.setTextColor(Color.parseColor("#3B82F6"));
             }
         }
@@ -303,15 +684,45 @@ public class ProfileController {
             tvStatRank.setText("Aktywne");
         }
 
-        // Hide technical backend panel from ordinary users completely
-        boolean isPrivileged = userProfile.isAdmin() || (authManager != null && authManager.getCurrentUser() != null && authManager.getCurrentUser().isAdmin());
+        // Dostęp do panelu zarządzania i opcji PIN wyłącznie dla administratorów (Admin oraz Creator)
+        boolean isPrivileged = userProfile.isCreator() || userProfile.isAdmin()
+                || (authManager != null && authManager.getCurrentUser() != null && (authManager.getCurrentUser().isAdmin() || authManager.getCurrentUser().isCreator()));
         if (cardUserManagement != null) {
             cardUserManagement.setVisibility(isPrivileged ? View.VISIBLE : View.GONE);
             if (isPrivileged) {
-                if (tvManagementHeaderTitle != null) tvManagementHeaderTitle.setText("Zarządzanie Użytkownikami");
-                if (tvManagementDesc != null) tvManagementDesc.setText("Podgląd i zarządzanie kontami w aplikacji.");
-                if (btnOpenUserManagement != null) btnOpenUserManagement.setText("Otwórz Panel");
+                if (tvManagementHeaderTitle != null) {
+                    tvManagementHeaderTitle.setText(userProfile.isCreator() ? "Zarządzanie Użytkownikami" : "Panel Administratora");
+                }
+                if (tvManagementDesc != null) {
+                    tvManagementDesc.setText("Zarządzaj kontami oraz kodem PIN administratora.");
+                }
+                if (btnOpenUserManagement != null) {
+                    btnOpenUserManagement.setText("Zarządzaj");
+                }
+                if (btnChangeAdminPin != null) {
+                    btnChangeAdminPin.setVisibility(View.VISIBLE);
+                    btnChangeAdminPin.setText("Zmień PIN");
+                }
+            } else {
+                if (btnChangeAdminPin != null) {
+                    btnChangeAdminPin.setVisibility(View.GONE);
+                }
             }
+        }
+
+        if (btnDeleteAccount != null) {
+            btnDeleteAccount.setVisibility(canDeleteOwnAccount() ? View.VISIBLE : View.GONE);
+        }
+
+        // Opcje konta (hasło / e-mail) mają sens tylko dla zalogowanych kont z hasłem
+        boolean hasRealAccount = loggedIn
+                && authManager.getCurrentUser() != null
+                && !authManager.getCurrentUser().isGuest();
+        if (btnChangePassword != null) {
+            btnChangePassword.setVisibility(hasRealAccount ? View.VISIBLE : View.GONE);
+        }
+        if (btnChangeEmail != null) {
+            btnChangeEmail.setVisibility(hasRealAccount ? View.VISIBLE : View.GONE);
         }
     }
 }
