@@ -1,6 +1,7 @@
 package com.example.testapp.feature.paywall;
 
 import com.example.testapp.data.AuthManager;
+import com.example.testapp.core.PayPalConfig;
 import com.example.testapp.core.UserProfile;
 
 import android.app.Activity;
@@ -92,7 +93,8 @@ public class PaywallController {
 
         int amount = isBigCoffee ? 10 : 5;
         String planName = isBigCoffee ? "Duża Kawa (10 PLN)" : "Mała Kawa (5 PLN)";
-        String url = "https://www.paypal.me/Rajman04/" + amount + "PLN";
+        // Jedno źródło prawdy dla adresu PayPal (PayPalConfig) zamiast hardcodu.
+        String url = PayPalConfig.buildCheckoutUrl(planName, amount);
 
         boolean wasPremium = userProfile != null && userProfile.isPremium();
 

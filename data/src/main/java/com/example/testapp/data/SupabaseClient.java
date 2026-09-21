@@ -445,7 +445,7 @@ public class SupabaseClient {
                 writeJson(pConn, pBody.toString());
                 pConn.getResponseCode();
 
-                // 2. Grant Premium in app_users
+                // 2. Grant Premium in profiles
                 String userEndpoint = config.getRestEndpoint(SupabaseConfig.TABLE_USERS) + "?username=eq." + username.trim().toLowerCase();
                 JSONObject uBody = new JSONObject();
                 uBody.put("purchased_premium", true);
@@ -770,15 +770,68 @@ public class SupabaseClient {
     }
 
     /**
-     * Sprawdza kod wpisany przez użytkownika (Supabase Auth: POST /auth/v1/verify).
-     * Błędny/wygasły kod kończy się błędem ERR_INVALID_OTP.
+     * Reset hasła: wysyła kod e-mailem (Supabase Auth: POST /auth/v1/recover).
+     * To endpoint, który używa szablonu "Reset Password" z Supabase
+     * (Authentication → Emails → Templates). Poprzedni flow (/otp) wysyłał
+     * szablon "Magic Link", więc wiadomość "Reset Password" nigdy nie przychodziła.
+     * Szablon musi zawierać {{ .Token }}, żeby użytkownik dostał 6-cyfrowy kod.
      */
-    public void verifyEmailOtp(String email, String token, Callback<Boolean> callback) {
+    public void sendPasswordRecoveryOtp(String email, Callback<Boolean> callback) {
         executor.execute(() -> {
             try {
                 String cleanEmail = email != null ? email.trim().toLowerCase() : "";
                 JSONObject body = new JSONObject();
-                body.put("type", "email");
+                body.put("email", cleanEmail);
+
+                HttpURLConnection conn = openAuthConnection("recover");
+                writeJson(conn, body.toString());
+
+                int respCode = conn.getResponseCode();
+                boolean success = (respCode >= 200 && respCode < 300);
+                String errDetails = "";
+                if (!success) {
+                    try {
+                        errDetails = readStream(conn.getErrorStream());
+                    } catch (Exception ignored) {}
+                }
+                final String err = success ? null : parseAuthError(respCode, errDetails);
+                mainHandler.post(() -> {
+                    if (callback == null) return;
+                    if (success) callback.onSuccess(true);
+                    else callback.onError(err);
+                });
+            } catch (Exception e) {
+                final String msg = networkErrorMessage(e);
+                mainHandler.post(() -> {
+                    if (callback != null) callback.onError(msg);
+                });
+            }
+        });
+    }
+
+    /**
+     * Sprawdza kod wpisany przez użytkownika (Supabase Auth: POST /auth/v1/verify).
+     * Błędny/wygasły kod kończy się błędem ERR_INVALID_OTP.
+     */
+    public void verifyEmailOtp(String email, String token, Callback<Boolean> callback) {
+        verifyOtpWithType("email", email, token, callback);
+    }
+
+    /**
+     * Weryfikuje kod resetu hasła (POST /auth/v1/verify z type=recovery).
+     * Tokeny wysłane przez /recover akceptuje WYŁĄCZNIE verify z type=recovery -
+     * próba weryfikacji z type=email kończy się błędem.
+     */
+    public void verifyRecoveryOtp(String email, String token, Callback<Boolean> callback) {
+        verifyOtpWithType("recovery", email, token, callback);
+    }
+
+    private void verifyOtpWithType(String type, String email, String token, Callback<Boolean> callback) {
+        executor.execute(() -> {
+            try {
+                String cleanEmail = email != null ? email.trim().toLowerCase() : "";
+                JSONObject body = new JSONObject();
+                body.put("type", type);
                 body.put("email", cleanEmail);
                 body.put("token", token != null ? token.trim() : "");
 

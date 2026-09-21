@@ -18,12 +18,15 @@ public class AuthUser {
         this.username = username != null ? username.trim().toLowerCase() : "";
         this.displayName = displayName != null ? displayName.trim() : "";
         this.email = "";
-        this.password = password != null ? password : "";
+        // Konstruktor też hashowuje (setPassword robiło to tylko przy zmianie hasła).
+        // Wcześniej rejestracja szła przez konstruktor i hasła trafiały do SharedPreferences
+        // oraz Supabase W POSTACI JAWNEJ.
+        this.password = normalizePassword(password);
         this.rank = rank != null ? rank : UserProfile.RANK_GUEST;
         this.title = title != null ? title : "Użytkownik";
         this.avatar = avatar != null ? avatar : "👤";
         this.purchasedPremium = purchasedPremium;
-        this.pin = pin != null ? pin.trim() : "";
+        this.pin = normalizePassword(pin);
     }
 
     public AuthUser(String username, String displayName, String password, String rank, String title, String avatar, boolean purchasedPremium) {
@@ -50,19 +53,34 @@ public class AuthUser {
         return password;
     }
 
+    /**
+     * Jedno miejsce normalizacji sekretu: pusty -> "", już zhaszowany -> bez zmian,
+     * jawny sekret -> hash PBKDF2. Używane przez konstruktor i settery, więc
+     * żadna ścieżka w aplikacji nie zapisze już hasła/PIN-u w postaci jawnej.
+     */
+    private static String normalizePassword(String secret) {
+        if (secret == null || secret.isEmpty()) return "";
+        String clean = secret.trim();
+        if (clean.isEmpty()) return "";
+        if (CredentialHasher.isHashed(clean)) return clean;
+        return CredentialHasher.hash(clean);
+    }
+
     public void setPassword(String password) {
-        if (password == null || password.isEmpty()) {
-            this.password = "";
-        } else if (CredentialHasher.isHashed(password)) {
-            this.password = password;
-        } else {
-            this.password = CredentialHasher.hash(password);
-        }
+        this.password = normalizePassword(password);
     }
 
     public boolean verifyPassword(String rawPassword) {
         if (rawPassword == null || password == null || password.isEmpty()) return false;
-        return CredentialHasher.verify(rawPassword, password);
+        if (CredentialHasher.verify(rawPassword, password)) {
+            // Migracja: jeśli zapisany sekret był jawny (stare konta),
+            // po udanym logowaniu zamień go na hash.
+            if (!CredentialHasher.isHashed(password)) {
+                password = CredentialHasher.hash(rawPassword);
+            }
+            return true;
+        }
+        return false;
     }
 
     public String getRank() {
@@ -102,18 +120,20 @@ public class AuthUser {
     }
 
     public void setPin(String pin) {
-        if (pin == null || pin.trim().isEmpty()) {
-            this.pin = "";
-        } else if (CredentialHasher.isHashed(pin.trim())) {
-            this.pin = pin.trim();
-        } else {
-            this.pin = CredentialHasher.hash(pin.trim());
-        }
+        this.pin = normalizePassword(pin);
     }
 
     public boolean verifyPin(String rawPin) {
         if (rawPin == null || pin == null || pin.isEmpty()) return false;
-        return CredentialHasher.verify(rawPin.trim(), pin);
+        String clean = rawPin.trim();
+        if (CredentialHasher.verify(clean, pin)) {
+            // Migracja plaintext -> hash przy pierwszej udanej weryfikacji.
+            if (!CredentialHasher.isHashed(pin)) {
+                pin = CredentialHasher.hash(clean);
+            }
+            return true;
+        }
+        return false;
     }
 
     public boolean isCreator() {

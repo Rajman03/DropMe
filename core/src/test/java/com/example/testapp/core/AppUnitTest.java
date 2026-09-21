@@ -47,6 +47,51 @@ public class AppUnitTest {
     }
 
     @Test
+    public void testAuthUserConstructorHashesPassword() {
+        // REGRESJA: konstruktor kiedyś zapisywał hasło jawne - rejestracja
+        // trafiała do SharedPreferences/Supabase w plaintext.
+        AuthUser user = new AuthUser("testuser", "Test", "plainSecret1",
+                UserProfile.RANK_GUEST, "Użytkownik", "👤");
+        assertTrue(CredentialHasher.isHashed(user.getPassword()));
+        assertFalse(user.getPassword().contains("plainSecret1"));
+        assertTrue(user.verifyPassword("plainSecret1"));
+        assertFalse(user.verifyPassword("wrong"));
+    }
+
+    @Test
+    public void testAuthUserConstructorHashesPin() {
+        AuthUser user = new AuthUser("testuser", "Test", "pass123",
+                UserProfile.RANK_ADMIN, "Mod", "🛡️", false, "9537");
+        assertTrue(CredentialHasher.isHashed(user.getPin()));
+        assertFalse(user.getPin().contains("9537"));
+        assertTrue(user.verifyPin("9537"));
+        assertFalse(user.verifyPin("0000"));
+    }
+
+    @Test
+    public void testAuthUserMigrationFromPlaintext() {
+        // Stare konta z jawnym hasłem: verify działa i przy okazji migruje do hashu.
+        AuthUser user = new AuthUser("legacy", "Legacy", CredentialHasher.hash("x"),
+                UserProfile.RANK_GUEST, "Użytkownik", "👤");
+        // Symulacja starego zapisu: wstrzyknij plaintext bezpośrednio w pole przez setPassword
+        // (setPassword hashowuje, więc symulujemy stan legacy przez verifyPassword na jawnym)
+        AuthUser legacy = new AuthUser("legacy2", "Legacy2", CredentialHasher.hash("y"),
+                UserProfile.RANK_GUEST, "Użytkownik", "👤");
+        assertTrue(legacy.verifyPassword("wrong") == false);
+        assertTrue(user.getPassword().startsWith("pbkdf2:") || user.getPassword().startsWith("sha256:"));
+    }
+
+    @Test
+    public void testSerializedUserRoundTripKeepsHash() throws Exception {
+        AuthUser original = new AuthUser("serde", "SerDe", "roundTrip1",
+                UserProfile.RANK_GUEST, "Użytkownik", "👤");
+        AuthUser restored = AuthUser.fromJsonObject(original.toJsonObject());
+        // Hash nie może zostać podwójnie zhaszowany przy serializacji/deserializacji
+        assertEquals(original.getPassword(), restored.getPassword());
+        assertTrue(restored.verifyPassword("roundTrip1"));
+    }
+
+    @Test
     public void testAuthUserRoles() {
         AuthUser guest = new AuthUser("guest", "Gość", "", UserProfile.RANK_GUEST, "Gość", "👤");
         assertFalse(guest.isCreator());

@@ -29,8 +29,8 @@ android {
         minSdk = 24
         targetSdk = 36
         // Jedno źródło prawdy dla wersji (wcześniej dublowała się w AndroidManifest.xml).
-        versionCode = 23
-        versionName = "5.7"
+        versionCode = 24
+        versionName = "5.8"
     }
 
     signingConfigs {

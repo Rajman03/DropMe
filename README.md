@@ -2,11 +2,13 @@
 
 **Wszystkie Twoje linki w jednym kodzie QR.**
 
-> Najnowsza zmiana (v5.7): uproszczenie panelu zarządzania użytkownikami — zmiana
-> PIN-u odbywa się wyłącznie w Profilu użytkownika (panel nie pozwala już zmieniać
-> PIN-u Twórcy, adminów ani własnego). Poprawki w Paywall: blokada podwójnych
-> zakupów (debounce), naprawiony tekst „dodatkowej kawy" po zakupie Premium oraz
-> jasny komunikat przy kolejnym wsparciu.
+> Najnowsza zmiana (v5.8): **naprawa resetu hasła** — e-mail przychodzi teraz
+> z szablonu „Reset Password" (endpoint `/auth/v1/recover` + weryfikacja `type=recovery`).
+> SafeGuard bezpieczeństwa: hasła i PIN-y są hashowane także przy rejestracji
+> (wcześniej rejestracja zapisywała jawne hasło), zamknięta luka przejęcia konta
+> znajomością loginu, blokada logowania przetrwa restart aplikacji, prefs z danymi
+> kont wykluczone z backupu. **Wymagane w Supabase:** uruchom zaktualizowany
+> `fix_supabase_profiles.sql` (RLS + indeksy).
 
 DropMe to lekka aplikacja na Androida, która zamienia profile w mediach społecznościowych
 w jeden zeskanowalny kod QR. Tworzysz wizytówkę, dodajesz konta i linki, a druga osoba
@@ -23,7 +25,7 @@ Efektem jest APK poniżej 200 kB.
 | | |
 |---|---|
 | **Plik** | [`app-release.apk`](app-release.apk) |
-| **Wersja** | 5.7 (versionCode 23) |
+| **Wersja** | 5.8 (versionCode 24) |
 | **Rozmiar** | ~199 kB |
 | **Android** | 7.0 (API 24) i nowszy |
 | **Podpis** | klucz release (`CN=DropMe Release`), schematy v1 + v2 + v3 |
@@ -75,7 +77,7 @@ klienckiej.
 
 | | |
 |---|---|
-| versionCode / versionName | 23 / 5.7 |
+| versionCode / versionName | 24 / 5.8 |
 | minSdk / targetSdk | 24 / 36 |
 | Zasoby | 333 |
 | Rozmiar `classes.dex` | ~148 kB |

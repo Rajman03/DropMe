@@ -1,4 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+  Reguły backupu (Android < 12).
+  Wcześniej: exclude path="." - NIE działało (nie jest poprawną ścieżką),
+  więc prefs z hashami haseł/PIN-ów-trafiały do backupu chmurowego.
+  Wykluczamy katalogi prefów wprost - każdy plik prefs aplikacji zawiera
+  dane kont (hashe haseł, PIN-y), więc nic z nich nie powinno być backupowane.
+-->
 <full-backup-content>
-    <exclude domain="sharedpref" path="."/>
+    <exclude domain="sharedpref" path="auth_accounts_prefs.xml"/>
+    <exclude domain="sharedpref" path="supabase_config_prefs.xml"/>
+    <exclude domain="sharedpref" path="vcard_user_prefs.xml"/>
+    <exclude domain="sharedpref" path="security_pin_prefs.xml"/>
+    <exclude domain="sharedpref" path="multilink_profile_prefs.xml"/>
+    <exclude domain="sharedpref" path="custom_qr_manager_prefs.xml"/>
+    <exclude domain="sharedpref" path="login_throttle_prefs.xml"/>
+    <exclude domain="sharedpref" path="dropme_telegraph.xml"/>
 </full-backup-content>

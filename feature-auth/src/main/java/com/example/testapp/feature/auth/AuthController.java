@@ -66,7 +66,10 @@ public class AuthController {
     private TextView tvAuthPrivacyPolicy;
 
     private boolean isRegisterMode = false;
-    private final LoginThrottle loginThrottle = new LoginThrottle();
+    // Throttle trwały: licznik nieudanych prób przetrwa restart aplikacji
+    // (wcześniej żył tylko w pamięci - restart zerował blokadę).
+    // Inicjalizacja w konstruktorze (pole final nie może czytać activity wcześniej).
+    private final LoginThrottle loginThrottle;
 
     // PIN Screen views (custom style matching screenshot)
     private TextView tvPinScreenTitle;
@@ -89,6 +92,8 @@ public class AuthController {
 
     public AuthController(Activity activity, AuthManager authManager, UserProfile userProfile, OnAuthSuccessListener listener) {
         this.activity = activity;
+        this.loginThrottle = new LoginThrottle(
+                activity.getSharedPreferences("login_throttle_prefs", Context.MODE_PRIVATE));
         this.authManager = authManager;
         this.userProfile = userProfile;
         this.listener = listener;
@@ -612,7 +617,9 @@ public class AuthController {
 
                 long createdAt = System.currentTimeMillis();
 
-                authManager.sendEmailOtp(email, new SupabaseClient.Callback<Boolean>() {
+                // Reset hasła idzie przez /auth/v1/recover -> szablon "Reset Password"
+                // (sendEmailOtp = /otp wysyła szablon "Magic Link" - stąd brak wiadomości).
+                authManager.sendPasswordRecoveryOtp(email, new SupabaseClient.Callback<Boolean>() {
                     @Override
                     public void onSuccess(Boolean result) {
                         dialog.dismiss();
@@ -692,7 +699,8 @@ public class AuthController {
                 btnSubmit.setEnabled(false);
                 btnSubmit.setText("Weryfikacja w Supabase...");
 
-                authManager.verifyEmailOtp(email, enteredCode, new SupabaseClient.Callback<Boolean>() {
+                // Kod z /recover weryfikujemy WYŁĄCZNIE z type=recovery.
+                authManager.verifyRecoveryOtp(email, enteredCode, new SupabaseClient.Callback<Boolean>() {
                     @Override
                     public void onSuccess(Boolean ok) {
                         String[] outErr = new String[1];

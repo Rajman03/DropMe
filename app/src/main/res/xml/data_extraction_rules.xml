@@ -1,9 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+  Reguły ekstrakcji danych (Android 12+).
+  Jak w backup_rules: path="." nie pasuje do niczego. Wymieniamy pliki prefów
+  wprost, żeby hashe haseł/PIN-ów nie szły do backupu w chmurze ani na
+  transfer urządzeń.
+-->
 <data-extraction-rules>
     <cloud-backup>
-        <exclude domain="sharedpref" path="."/>
+        <exclude domain="sharedpref" path="auth_accounts_prefs.xml"/>
+        <exclude domain="sharedpref" path="supabase_config_prefs.xml"/>
+        <exclude domain="sharedpref" path="vcard_user_prefs.xml"/>
+        <exclude domain="sharedpref" path="security_pin_prefs.xml"/>
+        <exclude domain="sharedpref" path="multilink_profile_prefs.xml"/>
+        <exclude domain="sharedpref" path="custom_qr_manager_prefs.xml"/>
+        <exclude domain="sharedpref" path="login_throttle_prefs.xml"/>
+        <exclude domain="sharedpref" path="dropme_telegraph.xml"/>
     </cloud-backup>
     <device-transfer>
-        <exclude domain="sharedpref" path="."/>
+        <exclude domain="sharedpref" path="auth_accounts_prefs.xml"/>
+        <exclude domain="sharedpref" path="supabase_config_prefs.xml"/>
+        <exclude domain="sharedpref" path="vcard_user_prefs.xml"/>
+        <exclude domain="sharedpref" path="security_pin_prefs.xml"/>
+        <exclude domain="sharedpref" path="multilink_profile_prefs.xml"/>
+        <exclude domain="sharedpref" path="custom_qr_manager_prefs.xml"/>
+        <exclude domain="sharedpref" path="login_throttle_prefs.xml"/>
+        <exclude domain="sharedpref" path="dropme_telegraph.xml"/>
     </device-transfer>
 </data-extraction-rules>

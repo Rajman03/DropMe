@@ -91,7 +91,7 @@ public class AuthManager {
                     users.add(u);
                 }
             }
-            saveUsers();
+            // Bez zbędnego zapisu przy każdym starcie (bylo: saveUsers() tutaj).
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -236,32 +236,26 @@ public class AuthManager {
             return;
         }
 
-        // Try Supabase fetch if not cached locally
-        supabaseClient.fetchUser(norm, new SupabaseClient.Callback<AuthUser>() {
+        // Try Supabase fetch if not cached locally.
+        // SECURITY: fetchUser WERYFIKUJE hasło po stronie danych (loginUser-
+        // -like flow) - tu NIE wolno nadpisywać hasła wpisanym tekstem.
+        // Wcześniej: cloudUser.setPassword(password) + setCurrentUser = przejęcie
+        // dowolnego konta znajomością samego username (hasło nadpisywało hash).
+        supabaseClient.loginUser(norm, password, new SupabaseClient.Callback<AuthUser>() {
             @Override
             public void onSuccess(AuthUser cloudUser) {
-                if (cloudUser != null) {
-                    cloudUser.setPassword(password);
-                    AuthUser ex = findUser(norm);
-                    if (ex != null) users.remove(ex);
-                    users.add(cloudUser);
-                    saveUsers();
-                    setCurrentUser(cloudUser, profile);
-                    if (callback != null) callback.onSuccess(cloudUser);
-                } else if (local != null) {
-                    if (local.verifyPassword(password)) {
-                        setCurrentUser(local, profile);
-                        if (callback != null) callback.onSuccess(local);
-                    } else {
-                        if (callback != null) callback.onError("Błędne hasło!");
-                    }
-                } else {
-                    if (callback != null) callback.onError("Nie znaleziono użytkownika @" + norm);
-                }
+                AuthUser ex = findUser(norm);
+                if (ex != null) users.remove(ex);
+                users.add(cloudUser);
+                saveUsers();
+                setCurrentUser(cloudUser, profile);
+                if (callback != null) callback.onSuccess(cloudUser);
             }
 
             @Override
             public void onError(String error) {
+                // Konto istnieje lokalnie (offline) - pozwól na lokalne hasło,
+                // ale błąd z Supabase (nieznany użytkownik) traktuj jako błąd logowania.
                 if (local != null && local.verifyPassword(password)) {
                     setCurrentUser(local, profile);
                     if (callback != null) callback.onSuccess(local);
@@ -874,6 +868,16 @@ public class AuthManager {
     /** Supabase Auth sprawdza kod wpisany przez użytkownika. */
     public void verifyEmailOtp(String email, String code, SupabaseClient.Callback<Boolean> callback) {
         supabaseClient.verifyEmailOtp(email, code, callback);
+    }
+
+    /** Reset hasła: wysyła kod z szablonu "Reset Password" (endpoint /auth/v1/recover). */
+    public void sendPasswordRecoveryOtp(String email, SupabaseClient.Callback<Boolean> callback) {
+        supabaseClient.sendPasswordRecoveryOtp(email, callback);
+    }
+
+    /** Reset hasła: weryfikuje kod z e-maila (verify z type=recovery). */
+    public void verifyRecoveryOtp(String email, String code, SupabaseClient.Callback<Boolean> callback) {
+        supabaseClient.verifyRecoveryOtp(email, code, callback);
     }
 
     /**
